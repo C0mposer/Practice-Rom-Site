@@ -8,6 +8,13 @@
       content="Spyro 1 Practice Rom website with downloads, documentation, and a ROM patcher."
     />
     <title>Spyro 1 Practice Rom</title>
+    <script>
+      (function () {
+        if (location.hostname === 'c0mposer.github.io' && /\/Practice-Rom-Site\/?/i.test(location.pathname)) {
+          location.replace('https://www.spyropracticerom.com/' + location.search + location.hash);
+        }
+      })();
+    </script>
     <link rel="icon" href="%BASE_URL%assets/comp-kara-logo.png" />
     <link rel="stylesheet" href="%BASE_URL%vendor/rom-patcher-js/style.css" />
     <script defer src="%BASE_URL%vendor/rom-patcher-js/RomPatcher.webapp.js"></script>
