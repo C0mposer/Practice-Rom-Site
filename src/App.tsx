@@ -73,9 +73,9 @@ const downloadBuilds = [
   },
   {
     assetIncludes: 'PS1',
-    name: 'DuckStation / PS1 + Emulators',
-    summary: 'DuckStation supports the full feature set; PS1 and other emulators are partial.',
-    features: ['DuckStation: Full', 'PS1: Partial', 'Other Emulators: Partial'],
+    name: 'DuckStation',
+    summary: 'Recommended emulator platform for the full feature set.',
+    features: ['Full Save States', 'Ghost Replay', 'Theatre Mode', 'Hitbox Viewer', 'Free Camera'],
   },
   {
     assetIncludes: 'PS2.IOP',
@@ -83,16 +83,34 @@ const downloadBuilds = [
     summary: 'Partial save states only: Spyro and camera position are saved.',
     features: ['Partial Save States', 'No Ghost Replay', 'No Theatre Mode', 'No Hitbox Viewer'],
   },
+  {
+    assetIncludes: 'PS1',
+    name: 'PS1 / Other Emulators',
+    summary: 'Partial save states only: Spyro and camera position are saved.',
+    features: ['Partial Save States', 'No Ghost Replay', 'No Theatre Mode', 'No Hitbox Viewer'],
+  },
 ];
 
 function pagePath() {
-  const path = window.location.pathname.replace(/\/+$/, '') || '/';
-  return path;
+  const basePath = new URL(import.meta.env.BASE_URL, window.location.origin).pathname.replace(/\/+$/, '');
+  const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
+  const withoutBase =
+    basePath && basePath !== '/' && currentPath.startsWith(basePath)
+      ? currentPath.slice(basePath.length).replace(/\/+$/, '') || '/'
+      : currentPath;
+
+  return withoutBase || '/';
 }
 
 function pageHref(path: string) {
-  if (path === '/') return './';
-  return path.replace(/^\//, '');
+  const basePath = import.meta.env.BASE_URL;
+  const normalizedPath = path === '/' ? '' : path.replace(/^\//, '');
+
+  if (basePath === './') {
+    return normalizedPath ? normalizedPath : './';
+  }
+
+  return `${basePath}${normalizedPath}`;
 }
 
 function formatFileSize(size: number) {
@@ -119,9 +137,22 @@ function getDownloadBuild(assetName: string) {
   return downloadBuilds.find((build) => assetName.includes(build.assetIncludes));
 }
 
-function getDownloadSortIndex(assetName: string) {
-  const buildIndex = downloadBuilds.findIndex((build) => assetName.includes(build.assetIncludes));
-  return buildIndex === -1 ? downloadBuilds.length : buildIndex;
+function getDownloadCards(assets: GitHubRelease['assets']) {
+  const cards = downloadBuilds
+    .map((build, index) => {
+      const asset = assets.find((candidate) => candidate.name.includes(build.assetIncludes));
+      return asset ? { asset, build, key: `${build.name}-${asset.id}`, index } : null;
+    })
+    .filter((card): card is { asset: GitHubRelease['assets'][number]; build: (typeof downloadBuilds)[number]; key: string; index: number } =>
+      Boolean(card),
+    );
+
+  const matchedAssetIds = new Set(cards.map((card) => card.asset.id));
+  const unmatchedCards = assets
+    .filter((asset) => !matchedAssetIds.has(asset.id))
+    .map((asset, offset) => ({ asset, build: undefined, key: `asset-${asset.id}`, index: downloadBuilds.length + offset }));
+
+  return [...cards, ...unmatchedCards].sort((a, b) => a.index - b.index);
 }
 
 function AppHeader() {
@@ -414,11 +445,9 @@ function DownloadsPage() {
             </div>
             <p className="muted">Published {formatDate(release.published_at)}</p>
             <div className="download-grid">
-              {[...release.assets]
-                .sort((a, b) => getDownloadSortIndex(a.name) - getDownloadSortIndex(b.name))
-                .map((asset) => (
-                  <DownloadCard asset={asset} key={asset.id} />
-                ))}
+              {getDownloadCards(release.assets).map(({ asset, build, key }) => (
+                <DownloadCard asset={asset} build={build} key={key} />
+              ))}
             </div>
           </>
         ) : (
@@ -429,9 +458,13 @@ function DownloadsPage() {
   );
 }
 
-function DownloadCard({ asset }: { asset: GitHubRelease['assets'][number] }) {
-  const build = getDownloadBuild(asset.name);
-
+function DownloadCard({
+  asset,
+  build = getDownloadBuild(asset.name),
+}: {
+  asset: GitHubRelease['assets'][number];
+  build?: (typeof downloadBuilds)[number];
+}) {
   return (
     <a className="download-card" href={asset.browser_download_url}>
       <div className="download-card-heading">
