@@ -1710,8 +1710,41 @@ input {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .countdown-stage {
+    min-height: 100dvh;
+  }
+
+  .countdown-video-frame {
+    inset: 0 0 auto;
+    height: min(58dvh, calc(100vw * 9 / 16));
+    min-height: 200px;
+    transform: none;
+    transform-origin: center center;
+  }
+
+  .countdown-video {
+    object-fit: contain;
+    object-position: center center;
+    background: #000;
+  }
+
   .timer-visible .countdown-video-frame {
-    transform: translate3d(0, -5vh, 0) scale(0.5);
+    height: min(34dvh, calc(100vw * 9 / 16));
+    min-height: 150px;
+    transform: none;
+  }
+
+  .countdown-glow {
+    top: 14%;
+    bottom: 0;
+    left: -15%;
+    right: -15%;
+    filter: blur(52px);
+  }
+
+  .countdown-launch {
+    bottom: clamp(12px, 3vh, 40px);
+    width: calc(100% - 24px);
   }
 
   .countdown-clock {
@@ -1779,4 +1812,23 @@ input {
     margin-left: 0;
   }
 
+}
+
+@media (max-width: 700px) and (orientation: landscape) {
+  .countdown-video-frame {
+    inset: 0;
+    height: auto;
+    transform: none;
+  }
+
+  .countdown-video {
+    object-fit: cover;
+    object-position: center 40%;
+  }
+
+  .timer-visible .countdown-video-frame {
+    height: auto;
+    min-height: 0;
+    transform: translate3d(0, -6vh, 0) scale(0.58);
+  }
 }

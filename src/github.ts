@@ -7,6 +7,7 @@ const RAW_WIKI_ROOT = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/w
 const REPO_BLOB_ROOT = `https://github.com/${OWNER}/${REPO}/blob/main/wiki/`;
 
 const FALLBACK_WIKI_NAMES = [
+  'README.md',
   '01-getting-started.md',
   '02-hotkeys.md',
   '03-il-timer.md',
@@ -21,8 +22,17 @@ const FALLBACK_WIKI_NAMES = [
   '12-building.md',
   '13-platform-comparison.md',
   '14-nestor-skip-frame-data.md',
-  'README.md',
 ];
+
+function sortWikiFiles(files: WikiFile[]) {
+  return [...files].sort((a, b) => {
+    const aIsReadme = a.name.toLowerCase() === 'readme.md';
+    const bIsReadme = b.name.toLowerCase() === 'readme.md';
+    if (aIsReadme && !bIsReadme) return -1;
+    if (!aIsReadme && bIsReadme) return 1;
+    return a.name.localeCompare(b.name, undefined, { numeric: true });
+  });
+}
 
 const FALLBACK_WIKI_FILES: WikiFile[] = FALLBACK_WIKI_NAMES.map((name) => ({
   name,
@@ -149,12 +159,12 @@ async function getRepoLatestRelease(repo: string, fallback: GitHubRelease) {
 export async function getWikiFiles() {
   try {
     const files = await readJson<WikiFile[]>(`${API_ROOT}/contents/wiki?ref=main`);
-    return files
-      .filter((file) => file.type === 'file' && file.name.toLowerCase().endsWith('.md'))
-      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    return sortWikiFiles(
+      files.filter((file) => file.type === 'file' && file.name.toLowerCase().endsWith('.md')),
+    );
   } catch (error) {
     console.warn('Using bundled wiki file fallback because GitHub API failed.', error);
-    return FALLBACK_WIKI_FILES;
+    return sortWikiFiles(FALLBACK_WIKI_FILES);
   }
 }
 
