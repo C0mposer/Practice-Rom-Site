@@ -4,6 +4,65 @@ const OWNER = 'C0mposer';
 const REPO = 'Spyro-1-Practice-Rom';
 const API_ROOT = `https://api.github.com/repos/${OWNER}/${REPO}`;
 const RAW_WIKI_ROOT = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/wiki/`;
+const REPO_BLOB_ROOT = `https://github.com/${OWNER}/${REPO}/blob/main/wiki/`;
+
+const FALLBACK_WIKI_NAMES = [
+  '01-getting-started.md',
+  '02-hotkeys.md',
+  '03-il-timer.md',
+  '04-save-states.md',
+  '05-level-select.md',
+  '06-ghost-replay.md',
+  '07-misc-settings.md',
+  '08-visualizer-settings.md',
+  '09-cosmetic-settings.md',
+  '10-level-specific.md',
+  '11-quality-of-life.md',
+  '12-building.md',
+  '13-platform-comparison.md',
+  '14-nestor-skip-frame-data.md',
+  'README.md',
+];
+
+const FALLBACK_WIKI_FILES: WikiFile[] = FALLBACK_WIKI_NAMES.map((name) => ({
+  name,
+  path: `wiki/${name}`,
+  download_url: `${RAW_WIKI_ROOT}${name}`,
+  html_url: `${REPO_BLOB_ROOT}${name}`,
+  size: 0,
+  type: 'file',
+}));
+
+const FALLBACK_RELEASE: GitHubRelease = {
+  name: 'Full Release Version 4.1',
+  tag_name: 'fullrelease4.1',
+  html_url: `https://github.com/${OWNER}/${REPO}/releases/tag/fullrelease4.1`,
+  published_at: '2025-05-06T07:33:15Z',
+  body: '',
+  assets: [
+    {
+      id: 252234310,
+      name: 'Spyro.1.Practice.Rom.PS1.zip',
+      size: 359510175,
+      download_count: 0,
+      browser_download_url: `https://github.com/${OWNER}/${REPO}/releases/download/fullrelease4.1/Spyro.1.Practice.Rom.PS1.zip`,
+    },
+    {
+      id: 252240481,
+      name: 'Spyro.1.Practice.Rom.PS2.Deckard.zip',
+      size: 359512948,
+      download_count: 0,
+      browser_download_url: `https://github.com/${OWNER}/${REPO}/releases/download/fullrelease4.1/Spyro.1.Practice.Rom.PS2.Deckard.zip`,
+    },
+    {
+      id: 252234384,
+      name: 'Spyro.1.Practice.Rom.PS2.IOP.zip',
+      size: 359510461,
+      download_count: 0,
+      browser_download_url: `https://github.com/${OWNER}/${REPO}/releases/download/fullrelease4.1/Spyro.1.Practice.Rom.PS2.IOP.zip`,
+    },
+  ],
+};
 
 export const LINKS = {
   repo: `https://github.com/${OWNER}/${REPO}`,
@@ -26,14 +85,24 @@ async function readJson<T>(url: string): Promise<T> {
 }
 
 export async function getLatestRelease() {
-  return readJson<GitHubRelease>(`${API_ROOT}/releases/latest`);
+  try {
+    return await readJson<GitHubRelease>(`${API_ROOT}/releases/latest`);
+  } catch (error) {
+    console.warn('Using bundled release fallback because GitHub API failed.', error);
+    return FALLBACK_RELEASE;
+  }
 }
 
 export async function getWikiFiles() {
-  const files = await readJson<WikiFile[]>(`${API_ROOT}/contents/wiki?ref=main`);
-  return files
-    .filter((file) => file.type === 'file' && file.name.toLowerCase().endsWith('.md'))
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  try {
+    const files = await readJson<WikiFile[]>(`${API_ROOT}/contents/wiki?ref=main`);
+    return files
+      .filter((file) => file.type === 'file' && file.name.toLowerCase().endsWith('.md'))
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  } catch (error) {
+    console.warn('Using bundled wiki file fallback because GitHub API failed.', error);
+    return FALLBACK_WIKI_FILES;
+  }
 }
 
 export async function getWikiMarkdown(file: WikiFile) {
