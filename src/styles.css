@@ -530,14 +530,29 @@ input {
   font-size: clamp(1.35rem, 3vw, 2rem);
 }
 
-.download-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.download-groups {
+  display: grid;
+  gap: 24px;
   margin-top: 22px;
 }
 
+.download-group h3 {
+  margin: 0 0 10px;
+  color: #ffffff;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.download-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
 .download-card {
-  min-height: 230px;
+  min-height: 320px;
   display: grid;
+  grid-template-rows: auto auto 1fr auto;
   align-content: start;
   gap: 10px;
   padding: 16px;
@@ -577,12 +592,18 @@ input {
 }
 
 .feature-pills {
-  display: flex;
-  flex-wrap: wrap;
+  align-self: start;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
 }
 
 .feature-pills em {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
   padding: 5px 8px;
   border: 1px solid rgba(139, 216, 210, 0.22);
   color: #8bd8d2;
@@ -590,6 +611,24 @@ input {
   font-style: normal;
   font-size: 0.78rem;
   font-weight: 800;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.feature-pills em.unavailable {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #7f8897;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.feature-pills em.unavailable::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  top: 50%;
+  border-top: 2px solid rgba(239, 123, 123, 0.88);
+  transform: rotate(-8deg);
 }
 
 @keyframes landing-rise {
@@ -924,5 +963,9 @@ input {
 
   .patcher-shell .text-right {
     text-align: left;
+  }
+
+  .feature-pills {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

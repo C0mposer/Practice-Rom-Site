@@ -68,28 +68,78 @@ const downloadBuilds = [
   {
     assetIncludes: 'PS2.Deckard',
     name: 'PS2 75k-90k',
+    group: 'All Features',
     summary: 'Recommended console platform for the full feature set.',
-    features: ['Full Save States', 'Ghost Replay', 'Theatre Mode', 'Hitbox Viewer', 'Free Camera'],
+    features: [
+      ['Full Save States', true],
+      ['Level Select', true],
+      ['IL Mode', true],
+      ['Timing Features', true],
+      ['Nestor Skip Data', true],
+      ['Custom Skins', true],
+      ['Ghost Replays', true],
+      ['Hitbox Viewer', true],
+      ['Free Camera', true],
+      ['Skin Editor', true],
+    ],
   },
   {
     assetIncludes: 'PS1',
     name: 'DuckStation',
+    group: 'All Features',
     summary: 'Recommended emulator platform for the full feature set.',
-    features: ['Full Save States', 'Ghost Replay', 'Theatre Mode', 'Hitbox Viewer', 'Free Camera'],
+    features: [
+      ['Full Save States', true],
+      ['Level Select', true],
+      ['IL Mode', true],
+      ['Timing Features', true],
+      ['Nestor Skip Data', true],
+      ['Custom Skins', true],
+      ['Ghost Replays', true],
+      ['Hitbox Viewer', true],
+      ['Free Camera', true],
+      ['Skin Editor', true],
+    ],
   },
   {
     assetIncludes: 'PS2.IOP',
     name: 'PS2 30k-70k (IOP)',
+    group: 'Partial Features',
     summary: 'Partial save states only: Spyro and camera position are saved.',
-    features: ['Partial Save States', 'No Ghost Replay', 'No Theatre Mode', 'No Hitbox Viewer'],
+    features: [
+      ['Partial Save States', true],
+      ['Level Select', true],
+      ['IL Mode', true],
+      ['Timing Features', true],
+      ['Nestor Skip Data', true],
+      ['Custom Skins', true],
+      ['Ghost Replays', false],
+      ['Hitbox Viewer', false],
+      ['Free Camera', false],
+      ['Skin Editor', false],
+    ],
   },
   {
     assetIncludes: 'PS1',
     name: 'PS1 / Other Emulators',
+    group: 'Partial Features',
     summary: 'Partial save states only: Spyro and camera position are saved.',
-    features: ['Partial Save States', 'No Ghost Replay', 'No Theatre Mode', 'No Hitbox Viewer'],
+    features: [
+      ['Partial Save States', true],
+      ['Level Select', true],
+      ['IL Mode', true],
+      ['Timing Features', true],
+      ['Nestor Skip Data', true],
+      ['Custom Skins', true],
+      ['Ghost Replays', false],
+      ['Hitbox Viewer', false],
+      ['Free Camera', false],
+      ['Skin Editor', false],
+    ],
   },
-];
+] as const;
+
+const downloadGroups = ['All Features', 'Partial Features'] as const;
 
 function pagePath() {
   const basePath = new URL(import.meta.env.BASE_URL, window.location.origin).pathname.replace(/\/+$/, '');
@@ -154,6 +204,8 @@ function getDownloadCards(assets: GitHubRelease['assets']) {
 
   return [...cards, ...unmatchedCards].sort((a, b) => a.index - b.index);
 }
+
+type DownloadCardModel = ReturnType<typeof getDownloadCards>[number];
 
 function AppHeader() {
   const currentPath = pagePath();
@@ -426,8 +478,8 @@ function DownloadsPage() {
     <main className="page">
       <PageIntro
         eyebrow="Downloads"
-        title="Latest Release Builds"
-        body="Download the correct build for your platform, with feature availability summarized from the wiki."
+        title="Latest Downloads"
+        body="Download the correct build for your platform"
         icon={HardDriveDownload}
       />
 
@@ -444,10 +496,26 @@ function DownloadsPage() {
               </a>
             </div>
             <p className="muted">Published {formatDate(release.published_at)}</p>
-            <div className="download-grid">
-              {getDownloadCards(release.assets).map(({ asset, build, key }) => (
-                <DownloadCard asset={asset} build={build} key={key} />
-              ))}
+            <div className="download-groups">
+              {downloadGroups.map((group) => {
+                const cards = getDownloadCards(release.assets).filter((card) => card.build?.group === group);
+
+                return (
+                  <div className="download-group" key={group}>
+                    <h3>{group}</h3>
+                    <div className="download-grid">
+                      {cards.map(({ asset, build, key }) => (
+                        <DownloadCard asset={asset} build={build} key={key} />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              {getDownloadCards(release.assets)
+                .filter((card) => !card.build)
+                .map(({ asset, build, key }: DownloadCardModel) => (
+                  <DownloadCard asset={asset} build={build} key={key} />
+                ))}
             </div>
           </>
         ) : (
@@ -477,8 +545,10 @@ function DownloadCard({
       {build && <p>{build.summary}</p>}
       {build && (
         <div className="feature-pills">
-          {build.features.map((feature) => (
-            <em key={feature}>{feature}</em>
+          {build.features.map(([feature, available]) => (
+            <em className={available ? '' : 'unavailable'} key={feature}>
+              {feature}
+            </em>
           ))}
         </div>
       )}
@@ -555,8 +625,8 @@ function WikiPage() {
     <main className="page wiki-page">
       <PageIntro
         eyebrow="Wiki"
-        title="Live Wiki Reader"
-        body="Rendered from the repository Markdown files without duplicating the source text."
+        title="Wiki Reader"
+        body="A repository of all the information you need to use the practice rom."
         icon={BookOpen}
       />
 
@@ -603,35 +673,35 @@ function AboutPage() {
     <main className="page">
       <PageIntro
         eyebrow="About"
-        title="Built for focused route work."
-        body="A compact home for patching, release builds, source documentation, and project links."
+        title=""
+        body=""
         icon={ShieldCheck}
       />
 
       <section className="about-grid">
         <div className="about-card about-logo-card">
           <img src={logoUrl} alt="Composer and OddKara logo" />
-          <h2>Composer & OddKara</h2>
-          <p>If you need help building this project, or are getting into Spyro or game modding, reach out on Discord.</p>
+          <h2>Made by: Composer & OddKara</h2>
+          <p>Made with love by Composer & OddKara</p>
         </div>
         <div className="about-card">
           <Box size={20} />
           <h2>Source</h2>
-          <p>The project lives on GitHub with the source, releases, and issue tracker.</p>
+          <p>View the source code on GitHub</p>
           <a href={LINKS.repo} target="_blank" rel="noreferrer">
             Source repository
             <ExternalLink size={14} />
           </a>
         </div>
-        <div className="about-card">
+        {/* <div className="about-card">
           <Clock3 size={20} />
           <h2>Docs</h2>
-          <p>Wiki pages are fetched from GitHub at runtime, so documentation changes do not need a second update here.</p>
+          <p>View the wiki source on GitHub</p>
           <a href={LINKS.sourceWiki} target="_blank" rel="noreferrer">
             Wiki source
             <ExternalLink size={14} />
           </a>
-        </div>
+        </div> */}
       </section>
     </main>
   );
