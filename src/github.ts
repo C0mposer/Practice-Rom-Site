@@ -70,6 +70,42 @@ export const LINKS = {
   releases: `https://github.com/${OWNER}/${REPO}/releases`,
   sourceWiki: `https://github.com/${OWNER}/${REPO}/tree/main/wiki`,
   romPatcher: 'https://github.com/marcrobledo/RomPatcher.js',
+  ghostToolDuckstation: 'https://github.com/C0mposer/Emulator-Ghost-Tool',
+  ghostToolPs2: 'https://github.com/C0mposer/Ghost-Tool',
+};
+
+const FALLBACK_GHOST_TOOL_DUCKSTATION: GitHubRelease = {
+  name: '1.0',
+  tag_name: '1.0',
+  html_url: `${LINKS.ghostToolDuckstation}/releases/tag/1.0`,
+  published_at: '2026-05-21T00:00:00Z',
+  body: '',
+  assets: [
+    {
+      id: 0,
+      name: 'ghost_tool.exe',
+      size: 0,
+      download_count: 0,
+      browser_download_url: `${LINKS.ghostToolDuckstation}/releases/download/1.0/ghost_tool.exe`,
+    },
+  ],
+};
+
+const FALLBACK_GHOST_TOOL_PS2: GitHubRelease = {
+  name: 'V1.0',
+  tag_name: '1.0',
+  html_url: `${LINKS.ghostToolPs2}/releases/tag/1.0`,
+  published_at: '2026-05-20T00:00:00Z',
+  body: '',
+  assets: [
+    {
+      id: 0,
+      name: 'ghost_tool.elf',
+      size: 0,
+      download_count: 0,
+      browser_download_url: `${LINKS.ghostToolPs2}/releases/download/1.0/ghost_tool.elf`,
+    },
+  ],
 };
 
 async function readJson<T>(url: string): Promise<T> {
@@ -90,6 +126,23 @@ export async function getLatestRelease() {
   } catch (error) {
     console.warn('Using bundled release fallback because GitHub API failed.', error);
     return FALLBACK_RELEASE;
+  }
+}
+
+export async function getGhostToolDuckstationRelease() {
+  return getRepoLatestRelease('Emulator-Ghost-Tool', FALLBACK_GHOST_TOOL_DUCKSTATION);
+}
+
+export async function getGhostToolPs2Release() {
+  return getRepoLatestRelease('Ghost-Tool', FALLBACK_GHOST_TOOL_PS2);
+}
+
+async function getRepoLatestRelease(repo: string, fallback: GitHubRelease) {
+  try {
+    return await readJson<GitHubRelease>(`https://api.github.com/repos/${OWNER}/${repo}/releases/latest`);
+  } catch (error) {
+    console.warn(`Using bundled ${repo} release fallback because GitHub API failed.`, error);
+    return fallback;
   }
 }
 

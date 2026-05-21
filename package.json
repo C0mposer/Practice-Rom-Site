@@ -7,9 +7,12 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build",
     "postbuild": "node scripts/copy-404.mjs",
+    "sync:ghosts": "node scripts/sync-ghost-drive-manifest.mjs",
+    "sync:ghost-links": "node scripts/sync-ghost-sheet-links.mjs && npx tsx scripts/sync-ghost-content.ts",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
+    "jszip": "^3.10.1",
     "lucide-react": "^0.468.0",
     "marked": "^15.0.3",
     "react": "^19.0.0",

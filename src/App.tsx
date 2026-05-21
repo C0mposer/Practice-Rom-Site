@@ -5,6 +5,7 @@ import {
   Download,
   ExternalLink,
   Gamepad2,
+  Ghost,
   Github,
   HardDriveDownload,
   Home,
@@ -14,32 +15,98 @@ import {
   Sparkles,
   TimerReset,
   Wrench,
+  X,
 } from 'lucide-react';
 import { marked } from 'marked';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { getLatestRelease, getWikiFiles, getWikiMarkdown, LINKS, resolveWikiAsset, titleFromFileName } from './github';
+import { GhostReplaysPage } from './GhostReplaysPage';
+import { getPrimaryEmbededPatch, setupSpyroPracticePatchSelect, waitForEmbededPatchSelect } from './patcher';
+import { useServerClock } from './serverTime';
 import type { GitHubRelease, WikiFile } from './types';
 
 declare global {
   interface Window {
     RomPatcherWeb?: {
       initialize: (settings: Record<string, unknown>, embeddedPatchInfo?: unknown) => void;
+      providePatchFile: (file: { fileName: string }) => void;
+      getHtmlElements?: () => {
+        show: (id: string) => void;
+        setEnabled: (id: string, enabled: boolean) => void;
+        setText: (id: string, text: string) => void;
+        addClass: (id: string, className: string) => void;
+      };
     };
+    BinFile?: new (data: ArrayBuffer) => { fileName: string };
     __spyroPatcherInitialized?: boolean;
   }
 }
 
 const logoUrl = `${import.meta.env.BASE_URL}assets/comp-kara-logo.png`;
+const duckstation8mbImageUrl = `${import.meta.env.BASE_URL}images/Duckstation%208MB.png`;
 const heroArtworkUrl = `${import.meta.env.BASE_URL}assets/Composer_Kara.png`;
+const introVideoUrl = `${import.meta.env.BASE_URL}videos/Fly In Practice Rom.mp4`;
+const loopVideoUrl = `${import.meta.env.BASE_URL}videos/Practice Rom No Fly In.mp4`;
+const releaseDate = new Date('2026-05-23T12:00:00-07:00');
+const creatorStorageKey = 'spyro-practice-creator-preview';
+const releaseAckStorageKey = 'spyro-practice-release-acknowledged';
+
+function readReleaseAcknowledged() {
+  return sessionStorage.getItem(releaseAckStorageKey) === '1';
+}
+
+function persistReleaseAcknowledged() {
+  sessionStorage.setItem(releaseAckStorageKey, '1');
+}
+
+function getCreatorBypassKey() {
+  return import.meta.env.VITE_CREATOR_BYPASS_KEY || 'odd-kara-preview';
+}
+
+function hasCreatorBypassInUrl() {
+  return new URLSearchParams(window.location.search).get('creator') === getCreatorBypassKey();
+}
+
+function readCreatorBypass() {
+  return localStorage.getItem(creatorStorageKey) === '1' || hasCreatorBypassInUrl();
+}
+
+function persistCreatorBypass() {
+  localStorage.setItem(creatorStorageKey, '1');
+}
+
+function clearCreatorBypass() {
+  localStorage.removeItem(creatorStorageKey);
+}
+
+function useCreatorBypass() {
+  const [bypassed, setBypassed] = useState(readCreatorBypass);
+
+  useEffect(() => {
+    if (hasCreatorBypassInUrl()) {
+      persistCreatorBypass();
+      setBypassed(true);
+    }
+  }, []);
+
+  const disableBypass = () => {
+    clearCreatorBypass();
+    setBypassed(false);
+  };
+
+  return { bypassed, disableBypass };
+}
 
 const navItems = [
   ['/', 'Home'],
   ['/downloads', 'Downloads'],
   ['/wiki', 'Wiki'],
-  ['/about', 'About'],
   ['/patcher', 'Patcher'],
+  ['/about', 'About'],
 ] as const;
+
+const ghostNavPaths = new Set(['/ghosts', '/ghost-replays']);
 
 const featureCards = [
   {
@@ -59,7 +126,7 @@ const featureCards = [
   },
   {
     title: 'Much More',
-    body: 'Custom skins, collision visualizers, quality-of-life settings, and much more!',
+    body: 'Level select, custom skins, collision visualizers, quality-of-life settings, and much more!',
     icon: Sparkles,
   },
 ];
@@ -85,7 +152,7 @@ const downloadBuilds = [
   },
   {
     assetIncludes: 'PS1',
-    name: 'DuckStation',
+    name: 'Duckstation',
     group: 'All Features',
     summary: 'Recommended emulator platform for the full feature set.',
     features: [
@@ -103,7 +170,7 @@ const downloadBuilds = [
   },
   {
     assetIncludes: 'PS2.IOP',
-    name: 'PS2 30k-70k (IOP)',
+    name: 'PS2 30k-70k',
     group: 'Partial Features',
     summary: 'Partial save states only: Spyro and camera position are saved.',
     features: [
@@ -121,7 +188,7 @@ const downloadBuilds = [
   },
   {
     assetIncludes: 'PS1',
-    name: 'PS1 / Other Emulators',
+    name: 'PS1 & Other Emulators',
     group: 'Partial Features',
     summary: 'Partial save states only: Spyro and camera position are saved.',
     features: [
@@ -157,10 +224,15 @@ function pageHref(path: string) {
   const normalizedPath = path === '/' ? '' : path.replace(/^\//, '');
 
   if (basePath === './') {
-    return normalizedPath ? normalizedPath : './';
+    return path === '/' ? '/' : `/${normalizedPath}`;
   }
 
   return `${basePath}${normalizedPath}`;
+}
+
+function goToHome(onRelease?: () => void) {
+  onRelease?.();
+  window.location.assign(pageHref('/'));
 }
 
 function formatFileSize(size: number) {
@@ -176,6 +248,16 @@ function formatDate(value: string) {
     month: 'short',
     day: 'numeric',
   }).format(new Date(value));
+}
+
+function formatCountdown(milliseconds: number) {
+  const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return { days, hours, minutes, seconds };
 }
 
 function getWikiFileNameFromHref(href: string) {
@@ -223,11 +305,230 @@ function AppHeader() {
           </a>
         ))}
       </nav>
-      <a className="github-button" href={LINKS.repo} target="_blank" rel="noreferrer">
-        <Github size={18} />
-        GitHub
-      </a>
+      <div className="header-actions">
+        <a
+          className={`ghosts-header-link${ghostNavPaths.has(currentPath) ? ' active' : ''}`}
+          href={pageHref('/ghosts')}
+          aria-label="Ghosts"
+          aria-current={ghostNavPaths.has(currentPath) ? 'page' : undefined}
+        >
+          <Ghost size={18} strokeWidth={2.25} aria-hidden />
+          <span>Ghosts</span>
+        </a>
+        <a className="github-button" href={LINKS.repo} target="_blank" rel="noreferrer">
+          <Github size={18} />
+          GitHub
+        </a>
+      </div>
     </header>
+  );
+}
+
+function CreatorPreviewBar({ onExit, showTestLink = false }: { onExit: () => void; showTestLink?: boolean }) {
+  return (
+    <div className="creator-preview-bar" role="status">
+      <span>
+        Creator preview
+        {showTestLink ? (
+          <>
+            {' '}
+            <a href={pageHref('/countdown-test')}>Countdown test (5s)</a>
+          </>
+        ) : null}
+      </span>
+      <button type="button" onClick={onExit}>
+        Exit preview
+      </button>
+    </div>
+  );
+}
+
+const countdownTestDurationMs = 5000;
+
+function CountdownGate({
+  getNow,
+  testMode = false,
+  onRelease,
+}: {
+  getNow: () => number;
+  testMode?: boolean;
+  onRelease?: () => void;
+}) {
+  const getNowRef = useRef(getNow);
+  getNowRef.current = getNow;
+  const loopVideoRef = useRef<HTMLVideoElement>(null);
+
+  const [showTimer, setShowTimer] = useState(false);
+  const [useLoopVideo, setUseLoopVideo] = useState(false);
+  const [releaseAtMs, setReleaseAtMs] = useState<number | null>(testMode ? null : releaseDate.getTime());
+  const [timeLeft, setTimeLeft] = useState(() => releaseDate.getTime() - getNow());
+  const [secondTick, setSecondTick] = useState(false);
+  const [colonGlow, setColonGlow] = useState(false);
+  const [hasNotifiedRelease, setHasNotifiedRelease] = useState(false);
+
+  const isZero = timeLeft <= 0;
+
+  useEffect(() => {
+    if (!isZero || hasNotifiedRelease || testMode) return;
+    setHasNotifiedRelease(true);
+    onRelease?.();
+  }, [isZero, hasNotifiedRelease, onRelease, testMode]);
+
+  useEffect(() => {
+    const revealTimer = window.setTimeout(() => {
+      setShowTimer(true);
+      if (testMode) {
+        setReleaseAtMs(getNowRef.current() + countdownTestDurationMs);
+      }
+    }, 8000);
+
+    return () => window.clearTimeout(revealTimer);
+  }, [testMode]);
+
+  useEffect(() => {
+    loopVideoRef.current?.load();
+  }, []);
+
+  useEffect(() => {
+    if (!useLoopVideo) return;
+    const loopVideo = loopVideoRef.current;
+    if (!loopVideo) return;
+    void loopVideo.play().catch(() => undefined);
+  }, [useLoopVideo]);
+
+  useEffect(() => {
+    if (testMode && releaseAtMs === null) return;
+
+    const targetReleaseMs = releaseAtMs ?? releaseDate.getTime();
+    let secondIntervalId = 0;
+    let colonIntervalId = 0;
+    let secondAlignId = 0;
+    let colonAlignId = 0;
+    let secondPulseTimeoutId = 0;
+    let colonGlowTimeoutId = 0;
+
+    const runSecondTick = () => {
+      const remaining = targetReleaseMs - getNowRef.current();
+      setTimeLeft(remaining);
+      if (remaining <= 0) return;
+
+      setSecondTick(false);
+      window.requestAnimationFrame(() => {
+        setSecondTick(true);
+        window.clearTimeout(secondPulseTimeoutId);
+        secondPulseTimeoutId = window.setTimeout(() => setSecondTick(false), 520);
+      });
+    };
+
+    const runColonGlow = () => {
+      if (targetReleaseMs - getNowRef.current() <= 0) return;
+
+      setColonGlow(false);
+      window.requestAnimationFrame(() => {
+        setColonGlow(true);
+        window.clearTimeout(colonGlowTimeoutId);
+        colonGlowTimeoutId = window.setTimeout(() => setColonGlow(false), 880);
+      });
+    };
+
+    const msUntilNextSecond = 1000 - (getNowRef.current() % 1000);
+    const msUntilNextHalfSecond = (500 - (getNowRef.current() % 1000) + 1000) % 1000;
+
+    runSecondTick();
+
+    secondAlignId = window.setTimeout(() => {
+      runSecondTick();
+      secondIntervalId = window.setInterval(runSecondTick, 1000);
+    }, msUntilNextSecond);
+
+    colonAlignId = window.setTimeout(() => {
+      runColonGlow();
+      colonIntervalId = window.setInterval(runColonGlow, 1000);
+    }, msUntilNextHalfSecond);
+
+    return () => {
+      window.clearTimeout(secondAlignId);
+      window.clearTimeout(colonAlignId);
+      window.clearInterval(secondIntervalId);
+      window.clearInterval(colonIntervalId);
+      window.clearTimeout(secondPulseTimeoutId);
+      window.clearTimeout(colonGlowTimeoutId);
+    };
+  }, [releaseAtMs, testMode]);
+
+  const countdown = formatCountdown(timeLeft);
+  const countdownUnits = [
+    ['Days', countdown.days],
+    ['Hours', countdown.hours],
+    ['Minutes', countdown.minutes],
+    ['Seconds', countdown.seconds],
+  ] as const;
+
+  return (
+    <main className={`countdown-page ${showTimer ? 'timer-visible' : ''} ${isZero ? 'countdown-released' : ''}`}>
+      <section className="countdown-stage">
+        <div className="countdown-video-frame">
+          <video
+            className={`countdown-video countdown-video-intro${useLoopVideo ? '' : ' is-active'}`}
+            src={introVideoUrl}
+            autoPlay
+            muted
+            playsInline
+            onEnded={() => setUseLoopVideo(true)}
+          />
+          <video
+            ref={loopVideoRef}
+            className={`countdown-video countdown-video-loop${useLoopVideo ? ' is-active' : ''}`}
+            src={loopVideoUrl}
+            preload="auto"
+            muted
+            playsInline
+            loop
+          />
+        </div>
+
+        <div className="countdown-glow" aria-hidden="true" />
+
+        <div className="countdown-launch" aria-hidden={!showTimer}>
+          <div className="countdown-hero">
+            <p className="countdown-eyebrow">Public launch</p>
+            <h1 className="countdown-title">
+              <span className="countdown-title-prefix">Version</span>
+              <span className="countdown-title-version">5.0</span>
+            </h1>
+            <p className="countdown-tagline">By: Composer & OddKara</p>
+          </div>
+
+          {isZero ? (
+            <button type="button" className="countdown-download-now primary-action" onClick={() => goToHome(onRelease)}>
+              <Download size={22} />
+              Download Now
+            </button>
+          ) : (
+            <div
+              className={`countdown-clock ${colonGlow ? 'countdown-colon-glow' : ''} ${secondTick ? 'countdown-second-tick' : ''}`}
+              aria-label="Countdown to Version 5.0 release"
+            >
+              {countdownUnits.map(([label, value], index) => (
+                <div className="countdown-clock-segment" key={label}>
+                  {index > 0 ? <span className="countdown-separator" aria-hidden="true">:</span> : null}
+                  <div className={`countdown-digit ${label === 'Seconds' ? 'countdown-digit-live' : ''}`}>
+                    <span className="countdown-digit-value" key={`${label}-${value}`}>
+                      {String(value).padStart(2, '0')}
+                    </span>
+                    <span className="countdown-digit-label">{label}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p className="countdown-release">
+            {isZero ? 'Version 5.0 is available now.' : 'May 23, 2026 · 12:00 PM PST'}
+          </p>
+        </div>
+      </section>
+    </main>
   );
 }
 
@@ -289,10 +590,10 @@ function LandingPage() {
             <span>Made By</span>
             <strong>Composer & OddKara</strong>
           </div>
-          <div className="hero-stat stat-b">
+          {/* <div className="hero-stat stat-b">
             <span>Built For</span>
             <strong>Efficient practice</strong>
-          </div>
+          </div> */}
         </div>
       </section>
 
@@ -315,8 +616,8 @@ function LandingPage() {
 
       <section className="landing-cta">
         <div>
-          <span className="eyebrow">Start here</span>
-          <h2>What are you waiting for?</h2>
+          <span className="eyebrow">Download</span>
+          <h2>Start Practicing</h2>
         </div>
         <div className="hero-actions">
           <a className="primary-action" href={pageHref('/downloads')}>
@@ -357,13 +658,25 @@ function PatcherPage() {
       }
 
       try {
-        window.RomPatcherWeb.initialize({
-          language: 'en',
-          requireValidation: false,
-          allowDropFiles: true,
-        });
+        window.RomPatcherWeb.initialize(
+          {
+            language: 'en',
+            requireValidation: false,
+            allowDropFiles: true,
+            oninitialize: () => {
+              waitForEmbededPatchSelect()
+                .then(() => setupSpyroPracticePatchSelect())
+                .then(() => setStatus(''))
+                .catch((error) => {
+                  setStatus(
+                    error instanceof Error ? error.message : 'Practice ROM patches could not be loaded.',
+                  );
+                });
+            },
+          },
+          getPrimaryEmbededPatch(),
+        );
         window.__spyroPatcherInitialized = true;
-        setStatus('');
       } catch (error) {
         setStatus(error instanceof Error ? error.message : 'The patcher could not initialize.');
       }
@@ -376,20 +689,16 @@ function PatcherPage() {
     <main className="page">
       <PageIntro
         eyebrow="Patcher"
-        title="Patch Your Own Spyro 1 Bin"
-        body="Runs locally in your browser through Rom Patcher JS. Your files stay on your machine."
+        title="Patch Your Own Rom"
+        body="Patch your own Spyro 1 rom locally."
         icon={Wrench}
       />
 
       <section className="patcher-shell">
         <div className="patcher-topline">
           <div>
-            <span className="eyebrow">Original ROM</span>
+            <span className="eyebrow">ROM file</span>
             <strong>Spyro 1 .bin file</strong>
-          </div>
-          <div>
-            <span className="eyebrow">Patch</span>
-            <strong>xdelta / supported patch file</strong>
           </div>
           <div>
             <span className="eyebrow">Output</span>
@@ -438,12 +747,15 @@ function PatcherPage() {
 
           <div className="rom-patcher-row margin-bottom" id="rom-patcher-row-file-patch">
             <div className="text-right">
-              <label htmlFor="rom-patcher-input-file-patch" data-localize="yes">
+              <label htmlFor="rom-patcher-select-patch" data-localize="yes">
                 Patch file:
               </label>
             </div>
             <div className="rom-patcher-container-input">
-              <input type="file" id="rom-patcher-input-file-patch" className="empty" disabled />
+              <select id="rom-patcher-select-patch" disabled />
+              <span id="rom-patcher-span-loading-embeded-patch" style={{ display: 'none' }}>
+                Downloading...
+              </span>
             </div>
           </div>
 
@@ -526,6 +838,67 @@ function DownloadsPage() {
   );
 }
 
+function DuckstationDownloadModal({
+  open,
+  downloadUrl,
+  onClose,
+}: {
+  open: boolean;
+  downloadUrl: string;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose} role="presentation">
+      <div
+        className="modal-dialog duckstation-modal"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="duckstation-modal-title"
+      >
+        <button type="button" className="modal-close" onClick={onClose} aria-label="Close">
+          <X size={18} />
+        </button>
+        <h2 id="duckstation-modal-title">Before you download</h2>
+        <p className="modal-message">Make sure to enable 8MB RAM in Duckstation&apos;s Console settings!</p>
+        <img
+          className="duckstation-modal-image"
+          src={duckstation8mbImageUrl}
+          alt="DuckStation Console settings showing 8MB RAM enabled"
+        />
+        <div className="modal-actions">
+          <a className="primary-action" href={downloadUrl} onClick={onClose}>
+            <Download size={18} />
+            Download
+          </a>
+          <button type="button" className="secondary-action" onClick={onClose}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DownloadCard({
   asset,
   build = getDownloadBuild(asset.name),
@@ -533,29 +906,48 @@ function DownloadCard({
   asset: GitHubRelease['assets'][number];
   build?: (typeof downloadBuilds)[number];
 }) {
+  const [showDuckstationModal, setShowDuckstationModal] = useState(false);
+  const isDuckstation = build?.name === 'Duckstation';
+
+  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!isDuckstation) return;
+    event.preventDefault();
+    setShowDuckstationModal(true);
+  };
+
   return (
-    <a className="download-card" href={asset.browser_download_url}>
-      <div className="download-card-heading">
-        <Download size={18} />
-        <div>
-          <span>{build?.name || asset.name}</span>
-          <small>{asset.name}</small>
+    <>
+      <a className="download-card" href={asset.browser_download_url} onClick={handleClick}>
+        <div className="download-card-heading">
+          <Download size={18} />
+          <div>
+            <span>{build?.name || asset.name}</span>
+            <small>{asset.name}</small>
+          </div>
         </div>
-      </div>
-      {build && <p>{build.summary}</p>}
-      {build && (
-        <div className="feature-pills">
-          {build.features.map(([feature, available]) => (
-            <em className={available ? '' : 'unavailable'} key={feature}>
-              {feature}
-            </em>
-          ))}
-        </div>
-      )}
-      <small>
-        {formatFileSize(asset.size)} / {asset.download_count.toLocaleString()} downloads
-      </small>
-    </a>
+        {build && <p>{build.summary}</p>}
+        {build && (
+          <div className="feature-pills">
+            {build.features.map(([feature, available]) => (
+              <em className={available ? '' : 'unavailable'} key={feature}>
+                {feature}
+              </em>
+            ))}
+          </div>
+        )}
+        <small>
+          {formatFileSize(asset.size)} / {asset.download_count.toLocaleString()} downloads
+        </small>
+      </a>
+
+      {isDuckstation ? (
+        <DuckstationDownloadModal
+          open={showDuckstationModal}
+          downloadUrl={asset.browser_download_url}
+          onClose={() => setShowDuckstationModal(false)}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -738,6 +1130,9 @@ function CurrentPage() {
       return <PatcherPage />;
     case '/downloads':
       return <DownloadsPage />;
+    case '/ghosts':
+    case '/ghost-replays':
+      return <GhostReplaysPage />;
     case '/wiki':
       return <WikiPage />;
     case '/about':
@@ -747,9 +1142,88 @@ function CurrentPage() {
   }
 }
 
+function useHasReleased(getNow: () => number, verified: boolean) {
+  const [hasReleased, setHasReleased] = useState(
+    () => verified && (getNow() >= releaseDate.getTime() || readReleaseAcknowledged()),
+  );
+
+  useEffect(() => {
+    if (!verified) return;
+
+    const check = () => {
+      if (getNow() >= releaseDate.getTime() || readReleaseAcknowledged()) {
+        setHasReleased(true);
+      }
+    };
+
+    check();
+    const intervalId = window.setInterval(check, 500);
+    return () => window.clearInterval(intervalId);
+  }, [getNow, verified]);
+
+  const markReleased = useCallback(() => {
+    persistReleaseAcknowledged();
+    setHasReleased(true);
+  }, []);
+
+  const resetReleaseAcknowledgement = useCallback(() => {
+    sessionStorage.removeItem(releaseAckStorageKey);
+    setHasReleased(verified && getNow() >= releaseDate.getTime());
+  }, [getNow, verified]);
+
+  return { hasReleased, markReleased, resetReleaseAcknowledgement };
+}
+
 export function App() {
+  const { bypassed, disableBypass } = useCreatorBypass();
+  const { getNow, verified } = useServerClock();
+  const { hasReleased, markReleased, resetReleaseAcknowledgement } = useHasReleased(getNow, verified);
+  const currentPath = pagePath();
+  const beforeRelease = !verified || !hasReleased;
+
+  const hasPreparedCountdownTest = useRef(false);
+
+  useEffect(() => {
+    if (currentPath !== '/countdown-test') {
+      hasPreparedCountdownTest.current = false;
+      return;
+    }
+
+    if (hasPreparedCountdownTest.current) return;
+    hasPreparedCountdownTest.current = true;
+    resetReleaseAcknowledgement();
+  }, [currentPath, resetReleaseAcknowledgement]);
+
+  if (currentPath === '/countdown-test') {
+    if (!bypassed) {
+      return <NotFoundPage />;
+    }
+
+    if (hasReleased) {
+      return (
+        <>
+          <CreatorPreviewBar onExit={disableBypass} showTestLink />
+          <AppHeader />
+          <CurrentPage />
+        </>
+      );
+    }
+
+    return (
+      <>
+        <CreatorPreviewBar onExit={disableBypass} />
+        <CountdownGate getNow={getNow} testMode onRelease={markReleased} />
+      </>
+    );
+  }
+
+  if (beforeRelease && !bypassed) {
+    return <CountdownGate getNow={getNow} onRelease={markReleased} />;
+  }
+
   return (
     <>
+      {beforeRelease && bypassed ? <CreatorPreviewBar onExit={disableBypass} showTestLink /> : null}
       <AppHeader />
       <CurrentPage />
     </>
