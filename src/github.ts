@@ -44,9 +44,9 @@ const FALLBACK_WIKI_FILES: WikiFile[] = FALLBACK_WIKI_NAMES.map((name) => ({
 }));
 
 const FALLBACK_RELEASE: GitHubRelease = {
-  name: 'Full Release Version 4.1',
-  tag_name: 'fullrelease4.1',
-  html_url: `https://github.com/${OWNER}/${REPO}/releases/tag/fullrelease4.1`,
+  name: 'Full Release Version 5.0',
+  tag_name: 'fullrelease5.0',
+  html_url: `https://github.com/${OWNER}/${REPO}/releases/tag/fullrelease5.0`,
   published_at: '2025-05-06T07:33:15Z',
   body: '',
   assets: [
@@ -55,21 +55,28 @@ const FALLBACK_RELEASE: GitHubRelease = {
       name: 'Spyro.1.Practice.Rom.PS1.zip',
       size: 359510175,
       download_count: 0,
-      browser_download_url: `https://github.com/${OWNER}/${REPO}/releases/download/fullrelease4.1/Spyro.1.Practice.Rom.PS1.zip`,
+      browser_download_url: `https://github.com/${OWNER}/${REPO}/releases/download/fullrelease5.0/Spyro.1.Practice.Rom.PS1.zip`,
+    },
+    {
+      id: 0,
+      name: 'Spyro.1.Practice.Rom.Duckstation.zip',
+      size: 0,
+      download_count: 0,
+      browser_download_url: `https://github.com/${OWNER}/${REPO}/releases/download/fullrelease5.0/Spyro.1.Practice.Rom.Duckstation.zip`,
     },
     {
       id: 252240481,
       name: 'Spyro.1.Practice.Rom.PS2.Deckard.zip',
       size: 359512948,
       download_count: 0,
-      browser_download_url: `https://github.com/${OWNER}/${REPO}/releases/download/fullrelease4.1/Spyro.1.Practice.Rom.PS2.Deckard.zip`,
+      browser_download_url: `https://github.com/${OWNER}/${REPO}/releases/download/fullrelease5.0/Spyro.1.Practice.Rom.PS2.Deckard.zip`,
     },
     {
       id: 252234384,
       name: 'Spyro.1.Practice.Rom.PS2.IOP.zip',
       size: 359510461,
       download_count: 0,
-      browser_download_url: `https://github.com/${OWNER}/${REPO}/releases/download/fullrelease4.1/Spyro.1.Practice.Rom.PS2.IOP.zip`,
+      browser_download_url: `https://github.com/${OWNER}/${REPO}/releases/download/fullrelease5.0/Spyro.1.Practice.Rom.PS2.IOP.zip`,
     },
   ],
 };

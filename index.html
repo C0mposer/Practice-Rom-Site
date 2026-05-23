@@ -12,6 +12,14 @@
       (function () {
         if (location.hostname === 'c0mposer.github.io' && /\/Practice-Rom-Site\/?/i.test(location.pathname)) {
           location.replace('https://www.spyropracticerom.com/' + location.search + location.hash);
+          return;
+        }
+
+        var path = location.pathname.replace(/\/{2,}/g, '/');
+        if (path.length > 1) path = path.replace(/\/+$/, '');
+        if (!path) path = '/';
+        if (path !== location.pathname) {
+          location.replace(location.origin + path + location.search + location.hash);
         }
       })();
     </script>

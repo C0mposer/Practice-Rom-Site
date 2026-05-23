@@ -151,7 +151,7 @@ const downloadBuilds = [
     ],
   },
   {
-    assetIncludes: 'PS1',
+    assetIncludes: 'Duckstation',
     name: 'Duckstation',
     group: 'All Features',
     summary: 'Recommended emulator platform for the full feature set.',
@@ -220,14 +220,14 @@ function pagePath() {
 }
 
 function pageHref(path: string) {
-  const basePath = import.meta.env.BASE_URL;
-  const normalizedPath = path === '/' ? '' : path.replace(/^\//, '');
+  const target = new URL(path, new URL(import.meta.env.BASE_URL, window.location.origin));
+  let pathname = target.pathname.replace(/\/{2,}/g, '/');
 
-  if (basePath === './') {
-    return path === '/' ? '/' : `/${normalizedPath}`;
+  if (pathname.length > 1) {
+    pathname = pathname.replace(/\/+$/, '');
   }
 
-  return `${basePath}${normalizedPath}`;
+  return `${pathname}${target.search}${target.hash}`;
 }
 
 function goToHome(onRelease?: () => void) {
