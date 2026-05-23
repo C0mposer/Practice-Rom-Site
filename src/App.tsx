@@ -1179,7 +1179,6 @@ export function App() {
   const { getNow, verified } = useServerClock();
   const { hasReleased, markReleased, resetReleaseAcknowledgement } = useHasReleased(getNow, verified);
   const currentPath = pagePath();
-  const beforeRelease = !verified || !hasReleased;
 
   const hasPreparedCountdownTest = useRef(false);
 
@@ -1217,13 +1216,8 @@ export function App() {
     );
   }
 
-  if (beforeRelease && !bypassed) {
-    return <CountdownGate getNow={getNow} onRelease={markReleased} />;
-  }
-
   return (
     <>
-      {beforeRelease && bypassed ? <CreatorPreviewBar onExit={disableBypass} showTestLink /> : null}
       <AppHeader />
       <CurrentPage />
     </>
