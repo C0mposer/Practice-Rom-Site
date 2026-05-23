@@ -652,6 +652,15 @@
     "progress": "9/9 (100%)",
     "entries": [
       {
+        "level": "Sunny Flight",
+        "name": "Jordy",
+        "time": "1:11.01",
+        "description": "Standard Route (1:08.36 flight time)",
+        "fileName": "ghost_sunny_flight_jordy.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=17Jt8aQkH889TnQxv1KM96gViIwZz_TMp",
+        "hasFile": true
+      },
+      {
         "level": "Night Flight",
         "name": "Composer",
         "time": "1:00.64",
