@@ -10,14 +10,29 @@ export function toDriveDownloadUrl(value: string): string | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
 
-  if (/drive\.google\.com\/uc\?/i.test(trimmed) && /[?&]id=/i.test(trimmed)) {
-    return trimmed;
+  let parsedUrl: URL | null = null;
+  try {
+    parsedUrl = new URL(trimmed);
+  } catch {
+    parsedUrl = null;
+  }
+
+  if (parsedUrl && /(^|\.)drive\.google\.com$/i.test(parsedUrl.hostname)) {
+    const existingId = parsedUrl.searchParams.get('id');
+    const resourceKey = parsedUrl.searchParams.get('resourcekey');
+    const pathId = parsedUrl.pathname.match(/\/file\/d\/([a-zA-Z0-9_-]+)/i)?.[1];
+    const fileId = pathId || existingId;
+
+    if (!fileId) return null;
+
+    const downloadUrl = new URL('https://drive.google.com/uc');
+    downloadUrl.searchParams.set('export', 'download');
+    downloadUrl.searchParams.set('id', fileId);
+    if (resourceKey) downloadUrl.searchParams.set('resourcekey', resourceKey);
+    return downloadUrl.href;
   }
 
   const fileIdMatch =
-    trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/i) ||
-    trimmed.match(/\/open\?id=([a-zA-Z0-9_-]+)/i) ||
-    trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/i) ||
     (/^[a-zA-Z0-9_-]{20,}$/.test(trimmed) ? ['', trimmed] : null);
 
   const fileId = fileIdMatch?.[1];

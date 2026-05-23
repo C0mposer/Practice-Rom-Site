@@ -17,6 +17,8 @@ const ghostSheetUrl =
   'https://docs.google.com/spreadsheets/d/1FRsIFruvudBQzKBPcCEm27SErnol9FkRNUDLPE_SKMI/edit';
 
 type GhostTab = 'setup' | 'downloads';
+const ghostDownloadCategoryTabs = ['Any%', '120%', 'Vortex'] as const;
+type GhostDownloadCategoryTab = (typeof ghostDownloadCategoryTabs)[number];
 
 function releaseAsset(release: GitHubRelease | null) {
   return release?.assets[0] ?? null;
@@ -60,6 +62,7 @@ function GhostReplayRow({
 
 function GhostDownloadsPanel() {
   const [categories, setCategories] = useState<GhostReplayCategory[]>([]);
+  const [activeCategoryName, setActiveCategoryName] = useState<GhostDownloadCategoryTab>('Any%');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -85,8 +88,23 @@ function GhostDownloadsPanel() {
     };
   }, []);
 
-  const availableCount = countAvailableGhosts(categories);
-  const downloadableCount = countDownloadableGhosts(categories);
+  const tabCategories = ghostDownloadCategoryTabs
+    .map((name) => categories.find((category) => category.name === name))
+    .filter((category): category is GhostReplayCategory => Boolean(category));
+  const activeCategory =
+    categories.find((category) => category.name === activeCategoryName) ?? tabCategories[0] ?? null;
+  const availableCount = countAvailableGhosts(tabCategories);
+  const downloadableCount = countDownloadableGhosts(tabCategories);
+
+  useEffect(() => {
+    if (loading || categories.length === 0) return;
+    if (categories.some((category) => category.name === activeCategoryName)) return;
+
+    const firstAvailable = ghostDownloadCategoryTabs.find((name) =>
+      categories.some((category) => category.name === name),
+    );
+    if (firstAvailable) setActiveCategoryName(firstAvailable);
+  }, [activeCategoryName, categories, loading]);
 
   return (
     <section className="ghost-replays-panel">
@@ -94,7 +112,8 @@ function GhostDownloadsPanel() {
         <p className="muted">
           {loading
             ? 'Loading ghosts from Google Sheets...'
-            : `${downloadableCount} of ${availableCount} replay${availableCount === 1 ? '' : 's'} ready to download across ${categories.length} categories`}
+            : ``}
+            {/* : `${downloadableCount} of ${availableCount} replay${availableCount === 1 ? '' : 's'} ready to download across ${tabCategories.length} categories`} */}
         </p>
         <div className="ghost-replays-toolbar-links">
           <a className="ghost-sheet-link" href={ghostSheetUrl} target="_blank" rel="noreferrer">
@@ -106,50 +125,72 @@ function GhostDownloadsPanel() {
 
       {error ? <div className="loading-card">{error}</div> : null}
 
-      {!error && !loading
-        ? categories.map((category) => {
-            const readyCount = category.entries.filter((entry) => entry.hasFile).length;
+      {!error && !loading ? (
+        <>
+          <div className="ghost-page-tabs ghost-category-tabs" role="tablist" aria-label="Ghost replay categories">
+            {ghostDownloadCategoryTabs.map((categoryName) => {
+              const category = categories.find((nextCategory) => nextCategory.name === categoryName);
+              const isActive = activeCategory?.name === categoryName;
 
-            return (
-              <section className="ghost-category" key={category.name}>
-                <header className="ghost-category-header">
-                  <h2>{category.name}</h2>
-                  {category.progress ? <span className="ghost-progress">{category.progress}</span> : null}
-                  <span className="ghost-category-count">
-                    {readyCount} replay{readyCount === 1 ? '' : 's'}
-                  </span>
-                </header>
+              return (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  className={isActive ? 'active' : ''}
+                  disabled={!category}
+                  onClick={() => setActiveCategoryName(categoryName)}
+                  key={categoryName}
+                >
+                  {categoryName}
+                </button>
+              );
+            })}
+          </div>
 
-                <div className="ghost-table" role="table" aria-label={`${category.name} ghost replays`}>
-                  <div className="ghost-row ghost-row-head" role="row">
-                    <div className="ghost-cell" role="columnheader">
-                      Level
-                    </div>
-                    <div className="ghost-cell" role="columnheader">
-                      Player
-                    </div>
-                    <div className="ghost-cell" role="columnheader">
-                      Time
-                    </div>
-                    <div className="ghost-cell" role="columnheader">
-                      Description
-                    </div>
-                    <div className="ghost-cell" role="columnheader">
-                      File
-                    </div>
+          {activeCategory ? (
+            <section className="ghost-category" key={activeCategory.name}>
+              <header className="ghost-category-header">
+                <h2>{activeCategory.name}</h2>
+                {activeCategory.progress ? <span className="ghost-progress">{activeCategory.progress}</span> : null}
+                <span className="ghost-category-count">
+                  {activeCategory.entries.filter((entry) => entry.hasFile).length} replay
+                  {activeCategory.entries.filter((entry) => entry.hasFile).length === 1 ? '' : 's'}
+                </span>
+              </header>
+
+              <div className="ghost-table" role="table" aria-label={`${activeCategory.name} ghost replays`}>
+                <div className="ghost-row ghost-row-head" role="row">
+                  <div className="ghost-cell" role="columnheader">
+                    Level
                   </div>
-
-                  {category.entries.map((entry) => (
-                    <GhostReplayRow
-                      entry={entry}
-                      key={`${category.name}-${entry.level}-${entry.fileName}-${entry.time}`}
-                    />
-                  ))}
+                  <div className="ghost-cell" role="columnheader">
+                    Player
+                  </div>
+                  <div className="ghost-cell" role="columnheader">
+                    Time
+                  </div>
+                  <div className="ghost-cell" role="columnheader">
+                    Description
+                  </div>
+                  <div className="ghost-cell" role="columnheader">
+                    File
+                  </div>
                 </div>
-              </section>
-            );
-          })
-        : null}
+
+                {activeCategory.entries.map((entry) => (
+                  <GhostReplayRow
+                    entry={entry}
+                    key={`${activeCategory.name}-${entry.level}-${entry.fileName}-${entry.time}`}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : (
+            <div className="loading-card">No replay categories are ready yet.</div>
+          )}
+        </>
+      ) : null}
 
       {loading ? <div className="loading-card">Loading ghost replays...</div> : null}
     </section>

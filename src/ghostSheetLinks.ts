@@ -49,22 +49,23 @@ function parseHyperlinkRelationships(xml: string) {
 }
 
 function readCellLabel(cellXml: string, sharedStrings: string[]) {
+  let formulaUrl = '';
   const formulaMatch = cellXml.match(/<f[^>]*>([\s\S]*?)<\/f>/);
   if (formulaMatch) {
     const formula = decodeXml(formulaMatch[1]);
     const hyperlinkMatch = formula.match(/HYPERLINK\(\s*"([^"]+)"/i);
-    if (hyperlinkMatch?.[1]) return { label: '', url: hyperlinkMatch[1] };
+    if (hyperlinkMatch?.[1]) formulaUrl = hyperlinkMatch[1];
   }
 
   const valueMatch = cellXml.match(/<v>([^<]*)<\/v>/);
-  if (!valueMatch) return { label: '', url: '' };
+  if (!valueMatch) return { label: '', url: formulaUrl };
 
   const rawValue = decodeXml(valueMatch[1]);
   if (cellXml.includes('t="s"') || /^\d+$/.test(rawValue)) {
-    return { label: sharedStrings[Number(rawValue)] || rawValue, url: '' };
+    return { label: sharedStrings[Number(rawValue)] || rawValue, url: formulaUrl };
   }
 
-  return { label: rawValue, url: '' };
+  return { label: rawValue, url: formulaUrl };
 }
 
 function parseSheetFileLinks(sheetXml: string, relationships: Record<string, string>, sharedStrings: string[]) {

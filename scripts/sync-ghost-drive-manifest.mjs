@@ -31,6 +31,17 @@ function addManifestKeys(manifest, fileName, url) {
   manifest[lower.replace(/_/g, ' ')] = url;
 }
 
+function driveDownloadUrl(file) {
+  const params = new URLSearchParams({
+    export: 'download',
+    id: file.id,
+  });
+
+  if (file.resourceKey) params.set('resourcekey', file.resourceKey);
+
+  return `https://drive.google.com/uc?${params}`;
+}
+
 async function listDriveFiles(folderId, apiKey) {
   const manifest = {};
   let pageToken;
@@ -38,7 +49,7 @@ async function listDriveFiles(folderId, apiKey) {
   do {
     const params = new URLSearchParams({
       q: `'${folderId}' in parents and trashed=false`,
-      fields: 'nextPageToken,files(id,name)',
+      fields: 'nextPageToken,files(id,name,resourceKey)',
       pageSize: '1000',
       key: apiKey,
       supportsAllDrives: 'true',
@@ -54,8 +65,7 @@ async function listDriveFiles(folderId, apiKey) {
 
     const payload = await response.json();
     for (const file of payload.files ?? []) {
-      const url = `https://drive.google.com/uc?export=download&id=${file.id}`;
-      addManifestKeys(manifest, file.name, url);
+      addManifestKeys(manifest, file.name, driveDownloadUrl(file));
     }
 
     pageToken = payload.nextPageToken;

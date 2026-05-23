@@ -29,7 +29,11 @@ function buildGhostFileMap_() {
     const file = files.next();
     const downloadUrl =
       'https://drive.google.com/uc?export=download&id=' + file.getId();
-    map[normalizeFileName_(file.getName())] = downloadUrl;
+    const resourceKey =
+      typeof file.getResourceKey === 'function' && file.getResourceKey()
+        ? '&resourcekey=' + encodeURIComponent(file.getResourceKey())
+        : '';
+    map[normalizeFileName_(file.getName())] = downloadUrl + resourceKey;
   }
 
   return map;

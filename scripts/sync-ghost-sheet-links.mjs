@@ -26,12 +26,30 @@ function decodeXml(value) {
 
 function toDriveDownloadUrl(value) {
   const trimmed = value.trim();
-  const fileIdMatch =
-    trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/i) ||
-    trimmed.match(/\/open\?id=([a-zA-Z0-9_-]+)/i) ||
-    trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/i);
-  const fileId = fileIdMatch?.[1];
-  return fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : trimmed;
+  let parsedUrl = null;
+  try {
+    parsedUrl = new URL(trimmed);
+  } catch {
+    parsedUrl = null;
+  }
+
+  if (parsedUrl && /(^|\.)drive\.google\.com$/i.test(parsedUrl.hostname)) {
+    const fileId =
+      parsedUrl.pathname.match(/\/file\/d\/([a-zA-Z0-9_-]+)/i)?.[1] || parsedUrl.searchParams.get('id');
+    const resourceKey = parsedUrl.searchParams.get('resourcekey');
+
+    if (!fileId) return trimmed;
+
+    const downloadUrl = new URL('https://drive.google.com/uc');
+    downloadUrl.searchParams.set('export', 'download');
+    downloadUrl.searchParams.set('id', fileId);
+    if (resourceKey) downloadUrl.searchParams.set('resourcekey', resourceKey);
+    return downloadUrl.href;
+  }
+
+  return /^[a-zA-Z0-9_-]{20,}$/.test(trimmed)
+    ? `https://drive.google.com/uc?export=download&id=${trimmed}`
+    : trimmed;
 }
 
 function normalizeGhostFileName(name) {
@@ -60,13 +78,21 @@ function parseHyperlinkRelationships(xml) {
 }
 
 function readCellLabel(cellXml, sharedStrings) {
+  let formulaUrl = '';
+  const formulaMatch = cellXml.match(/<f[^>]*>([\s\S]*?)<\/f>/);
+  if (formulaMatch) {
+    const formula = decodeXml(formulaMatch[1]);
+    const hyperlinkMatch = formula.match(/HYPERLINK\(\s*"([^"]+)"/i);
+    if (hyperlinkMatch?.[1]) formulaUrl = hyperlinkMatch[1];
+  }
+
   const valueMatch = cellXml.match(/<v>([^<]*)<\/v>/);
-  if (!valueMatch) return '';
+  if (!valueMatch) return { label: '', url: formulaUrl };
   const rawValue = decodeXml(valueMatch[1]);
   if (cellXml.includes('t="s"') || /^\d+$/.test(rawValue)) {
-    return sharedStrings[Number(rawValue)] || rawValue;
+    return { label: sharedStrings[Number(rawValue)] || rawValue, url: formulaUrl };
   }
-  return rawValue;
+  return { label: rawValue, url: formulaUrl };
 }
 
 function parseSheetFileLinks(sheetXml, relationships, sharedStrings) {
@@ -89,10 +115,10 @@ function parseSheetFileLinks(sheetXml, relationships, sharedStrings) {
       const cellMatch = sheetXml.match(new RegExp(`<c r="${cellRef}"[^>]*>([\\s\\S]*?)</c>`));
       if (!cellMatch) continue;
 
-      const label = readCellLabel(cellMatch[1], sharedStrings);
+      const { label, url: formulaUrl } = readCellLabel(cellMatch[1], sharedStrings);
       if (!label) continue;
 
-      const downloadUrl = toDriveDownloadUrl(relationshipUrl);
+      const downloadUrl = toDriveDownloadUrl(formulaUrl || relationshipUrl);
       links[label.trim().toLowerCase()] = downloadUrl;
       links[normalizeGhostFileName(label)] = downloadUrl;
     }
