@@ -9,6 +9,10 @@ export const spyroPracticePatches: SpyroPracticePatch[] = [
     name: 'Spyro 1 Practice Rom PS1/EMU',
   },
   {
+    file: 'patches/DUCKSTATION_Practice_Rom.xdelta',
+    name: 'Spyro 1 Practice Rom Duckstation',
+  },
+  {
     file: 'patches/PS2_DECKARD_Practice_Rom.xdelta',
     name: 'Spyro 1 Practice Rom PS2 (75k-90k)',
   },
