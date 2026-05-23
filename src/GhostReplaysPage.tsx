@@ -17,7 +17,7 @@ const ghostSheetUrl =
   'https://docs.google.com/spreadsheets/d/1FRsIFruvudBQzKBPcCEm27SErnol9FkRNUDLPE_SKMI/edit';
 
 type GhostTab = 'setup' | 'downloads';
-const ghostDownloadCategoryTabs = ['Any%', '120%', 'Vortex'] as const;
+const ghostDownloadCategoryTabs = ['Any%', '120%', 'Vortex', 'Flights'] as const;
 type GhostDownloadCategoryTab = (typeof ghostDownloadCategoryTabs)[number];
 
 function releaseAsset(release: GitHubRelease | null) {
