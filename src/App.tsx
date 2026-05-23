@@ -18,12 +18,11 @@ import {
   X,
 } from 'lucide-react';
 import { marked } from 'marked';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { getLatestRelease, getWikiFiles, getWikiMarkdown, LINKS, resolveWikiAsset, titleFromFileName } from './github';
 import { GhostReplaysPage } from './GhostReplaysPage';
 import { getPrimaryEmbededPatch, setupSpyroPracticePatchSelect, waitForEmbededPatchSelect } from './patcher';
-import { useServerClock } from './serverTime';
 import type { GitHubRelease, WikiFile } from './types';
 
 declare global {
@@ -46,57 +45,6 @@ declare global {
 const logoUrl = `${import.meta.env.BASE_URL}assets/comp-kara-logo.png`;
 const duckstation8mbImageUrl = `${import.meta.env.BASE_URL}images/Duckstation%208MB.png`;
 const heroArtworkUrl = `${import.meta.env.BASE_URL}assets/Composer_Kara.png`;
-const introVideoUrl = `${import.meta.env.BASE_URL}videos/Fly In Practice Rom.mp4`;
-const loopVideoUrl = `${import.meta.env.BASE_URL}videos/Practice Rom No Fly In.mp4`;
-const releaseDate = new Date('2026-05-23T12:00:00-07:00');
-const creatorStorageKey = 'spyro-practice-creator-preview';
-const releaseAckStorageKey = 'spyro-practice-release-acknowledged';
-
-function readReleaseAcknowledged() {
-  return sessionStorage.getItem(releaseAckStorageKey) === '1';
-}
-
-function persistReleaseAcknowledged() {
-  sessionStorage.setItem(releaseAckStorageKey, '1');
-}
-
-function getCreatorBypassKey() {
-  return import.meta.env.VITE_CREATOR_BYPASS_KEY || 'odd-kara-preview';
-}
-
-function hasCreatorBypassInUrl() {
-  return new URLSearchParams(window.location.search).get('creator') === getCreatorBypassKey();
-}
-
-function readCreatorBypass() {
-  return localStorage.getItem(creatorStorageKey) === '1' || hasCreatorBypassInUrl();
-}
-
-function persistCreatorBypass() {
-  localStorage.setItem(creatorStorageKey, '1');
-}
-
-function clearCreatorBypass() {
-  localStorage.removeItem(creatorStorageKey);
-}
-
-function useCreatorBypass() {
-  const [bypassed, setBypassed] = useState(readCreatorBypass);
-
-  useEffect(() => {
-    if (hasCreatorBypassInUrl()) {
-      persistCreatorBypass();
-      setBypassed(true);
-    }
-  }, []);
-
-  const disableBypass = () => {
-    clearCreatorBypass();
-    setBypassed(false);
-  };
-
-  return { bypassed, disableBypass };
-}
 
 const navItems = [
   ['/', 'Home'],
@@ -230,11 +178,6 @@ function pageHref(path: string) {
   return `${pathname}${target.search}${target.hash}`;
 }
 
-function goToHome(onRelease?: () => void) {
-  onRelease?.();
-  window.location.assign(pageHref('/'));
-}
-
 function formatFileSize(size: number) {
   if (!size) return 'Unknown size';
   const units = ['B', 'KB', 'MB', 'GB'];
@@ -248,16 +191,6 @@ function formatDate(value: string) {
     month: 'short',
     day: 'numeric',
   }).format(new Date(value));
-}
-
-function formatCountdown(milliseconds: number) {
-  const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  return { days, hours, minutes, seconds };
 }
 
 function getWikiFileNameFromHref(href: string) {
@@ -321,214 +254,6 @@ function AppHeader() {
         </a>
       </div>
     </header>
-  );
-}
-
-function CreatorPreviewBar({ onExit, showTestLink = false }: { onExit: () => void; showTestLink?: boolean }) {
-  return (
-    <div className="creator-preview-bar" role="status">
-      <span>
-        Creator preview
-        {showTestLink ? (
-          <>
-            {' '}
-            <a href={pageHref('/countdown-test')}>Countdown test (5s)</a>
-          </>
-        ) : null}
-      </span>
-      <button type="button" onClick={onExit}>
-        Exit preview
-      </button>
-    </div>
-  );
-}
-
-const countdownTestDurationMs = 5000;
-
-function CountdownGate({
-  getNow,
-  testMode = false,
-  onRelease,
-}: {
-  getNow: () => number;
-  testMode?: boolean;
-  onRelease?: () => void;
-}) {
-  const getNowRef = useRef(getNow);
-  getNowRef.current = getNow;
-  const loopVideoRef = useRef<HTMLVideoElement>(null);
-
-  const [showTimer, setShowTimer] = useState(false);
-  const [useLoopVideo, setUseLoopVideo] = useState(false);
-  const [releaseAtMs, setReleaseAtMs] = useState<number | null>(testMode ? null : releaseDate.getTime());
-  const [timeLeft, setTimeLeft] = useState(() => releaseDate.getTime() - getNow());
-  const [secondTick, setSecondTick] = useState(false);
-  const [colonGlow, setColonGlow] = useState(false);
-  const [hasNotifiedRelease, setHasNotifiedRelease] = useState(false);
-
-  const isZero = timeLeft <= 0;
-
-  useEffect(() => {
-    if (!isZero || hasNotifiedRelease || testMode) return;
-    setHasNotifiedRelease(true);
-    onRelease?.();
-  }, [isZero, hasNotifiedRelease, onRelease, testMode]);
-
-  useEffect(() => {
-    const revealTimer = window.setTimeout(() => {
-      setShowTimer(true);
-      if (testMode) {
-        setReleaseAtMs(getNowRef.current() + countdownTestDurationMs);
-      }
-    }, 8000);
-
-    return () => window.clearTimeout(revealTimer);
-  }, [testMode]);
-
-  useEffect(() => {
-    loopVideoRef.current?.load();
-  }, []);
-
-  useEffect(() => {
-    if (!useLoopVideo) return;
-    const loopVideo = loopVideoRef.current;
-    if (!loopVideo) return;
-    void loopVideo.play().catch(() => undefined);
-  }, [useLoopVideo]);
-
-  useEffect(() => {
-    if (testMode && releaseAtMs === null) return;
-
-    const targetReleaseMs = releaseAtMs ?? releaseDate.getTime();
-    let secondIntervalId = 0;
-    let colonIntervalId = 0;
-    let secondAlignId = 0;
-    let colonAlignId = 0;
-    let secondPulseTimeoutId = 0;
-    let colonGlowTimeoutId = 0;
-
-    const runSecondTick = () => {
-      const remaining = targetReleaseMs - getNowRef.current();
-      setTimeLeft(remaining);
-      if (remaining <= 0) return;
-
-      setSecondTick(false);
-      window.requestAnimationFrame(() => {
-        setSecondTick(true);
-        window.clearTimeout(secondPulseTimeoutId);
-        secondPulseTimeoutId = window.setTimeout(() => setSecondTick(false), 520);
-      });
-    };
-
-    const runColonGlow = () => {
-      if (targetReleaseMs - getNowRef.current() <= 0) return;
-
-      setColonGlow(false);
-      window.requestAnimationFrame(() => {
-        setColonGlow(true);
-        window.clearTimeout(colonGlowTimeoutId);
-        colonGlowTimeoutId = window.setTimeout(() => setColonGlow(false), 880);
-      });
-    };
-
-    const msUntilNextSecond = 1000 - (getNowRef.current() % 1000);
-    const msUntilNextHalfSecond = (500 - (getNowRef.current() % 1000) + 1000) % 1000;
-
-    runSecondTick();
-
-    secondAlignId = window.setTimeout(() => {
-      runSecondTick();
-      secondIntervalId = window.setInterval(runSecondTick, 1000);
-    }, msUntilNextSecond);
-
-    colonAlignId = window.setTimeout(() => {
-      runColonGlow();
-      colonIntervalId = window.setInterval(runColonGlow, 1000);
-    }, msUntilNextHalfSecond);
-
-    return () => {
-      window.clearTimeout(secondAlignId);
-      window.clearTimeout(colonAlignId);
-      window.clearInterval(secondIntervalId);
-      window.clearInterval(colonIntervalId);
-      window.clearTimeout(secondPulseTimeoutId);
-      window.clearTimeout(colonGlowTimeoutId);
-    };
-  }, [releaseAtMs, testMode]);
-
-  const countdown = formatCountdown(timeLeft);
-  const countdownUnits = [
-    ['Days', countdown.days],
-    ['Hours', countdown.hours],
-    ['Minutes', countdown.minutes],
-    ['Seconds', countdown.seconds],
-  ] as const;
-
-  return (
-    <main className={`countdown-page ${showTimer ? 'timer-visible' : ''} ${isZero ? 'countdown-released' : ''}`}>
-      <section className="countdown-stage">
-        <div className="countdown-video-frame">
-          <video
-            className={`countdown-video countdown-video-intro${useLoopVideo ? '' : ' is-active'}`}
-            src={introVideoUrl}
-            autoPlay
-            muted
-            playsInline
-            onEnded={() => setUseLoopVideo(true)}
-          />
-          <video
-            ref={loopVideoRef}
-            className={`countdown-video countdown-video-loop${useLoopVideo ? ' is-active' : ''}`}
-            src={loopVideoUrl}
-            preload="auto"
-            muted
-            playsInline
-            loop
-          />
-        </div>
-
-        <div className="countdown-glow" aria-hidden="true" />
-
-        <div className="countdown-launch" aria-hidden={!showTimer}>
-          <div className="countdown-hero">
-            <p className="countdown-eyebrow">Public launch</p>
-            <h1 className="countdown-title">
-              <span className="countdown-title-prefix">Version</span>
-              <span className="countdown-title-version">5.0</span>
-            </h1>
-            <p className="countdown-tagline">By: Composer & OddKara</p>
-          </div>
-
-          {isZero ? (
-            <button type="button" className="countdown-download-now primary-action" onClick={() => goToHome(onRelease)}>
-              <Download size={22} />
-              Download Now
-            </button>
-          ) : (
-            <div
-              className={`countdown-clock ${colonGlow ? 'countdown-colon-glow' : ''} ${secondTick ? 'countdown-second-tick' : ''}`}
-              aria-label="Countdown to Version 5.0 release"
-            >
-              {countdownUnits.map(([label, value], index) => (
-                <div className="countdown-clock-segment" key={label}>
-                  {index > 0 ? <span className="countdown-separator" aria-hidden="true">:</span> : null}
-                  <div className={`countdown-digit ${label === 'Seconds' ? 'countdown-digit-live' : ''}`}>
-                    <span className="countdown-digit-value" key={`${label}-${value}`}>
-                      {String(value).padStart(2, '0')}
-                    </span>
-                    <span className="countdown-digit-label">{label}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <p className="countdown-release">
-            {isZero ? 'Version 5.0 is available now.' : 'May 23, 2026 · 12:00 PM PST'}
-          </p>
-        </div>
-      </section>
-    </main>
   );
 }
 
@@ -1142,80 +867,7 @@ function CurrentPage() {
   }
 }
 
-function useHasReleased(getNow: () => number, verified: boolean) {
-  const [hasReleased, setHasReleased] = useState(
-    () => verified && (getNow() >= releaseDate.getTime() || readReleaseAcknowledged()),
-  );
-
-  useEffect(() => {
-    if (!verified) return;
-
-    const check = () => {
-      if (getNow() >= releaseDate.getTime() || readReleaseAcknowledged()) {
-        setHasReleased(true);
-      }
-    };
-
-    check();
-    const intervalId = window.setInterval(check, 500);
-    return () => window.clearInterval(intervalId);
-  }, [getNow, verified]);
-
-  const markReleased = useCallback(() => {
-    persistReleaseAcknowledged();
-    setHasReleased(true);
-  }, []);
-
-  const resetReleaseAcknowledgement = useCallback(() => {
-    sessionStorage.removeItem(releaseAckStorageKey);
-    setHasReleased(verified && getNow() >= releaseDate.getTime());
-  }, [getNow, verified]);
-
-  return { hasReleased, markReleased, resetReleaseAcknowledgement };
-}
-
 export function App() {
-  const { bypassed, disableBypass } = useCreatorBypass();
-  const { getNow, verified } = useServerClock();
-  const { hasReleased, markReleased, resetReleaseAcknowledgement } = useHasReleased(getNow, verified);
-  const currentPath = pagePath();
-
-  const hasPreparedCountdownTest = useRef(false);
-
-  useEffect(() => {
-    if (currentPath !== '/countdown-test') {
-      hasPreparedCountdownTest.current = false;
-      return;
-    }
-
-    if (hasPreparedCountdownTest.current) return;
-    hasPreparedCountdownTest.current = true;
-    resetReleaseAcknowledgement();
-  }, [currentPath, resetReleaseAcknowledgement]);
-
-  if (currentPath === '/countdown-test') {
-    if (!bypassed) {
-      return <NotFoundPage />;
-    }
-
-    if (hasReleased) {
-      return (
-        <>
-          <CreatorPreviewBar onExit={disableBypass} showTestLink />
-          <AppHeader />
-          <CurrentPage />
-        </>
-      );
-    }
-
-    return (
-      <>
-        <CreatorPreviewBar onExit={disableBypass} />
-        <CountdownGate getNow={getNow} testMode onRelease={markReleased} />
-      </>
-    );
-  }
-
   return (
     <>
       <AppHeader />

@@ -1,13 +1,13 @@
 [
   {
     "name": "120%",
-    "progress": "13/26 (50%)",
+    "progress": "18/26 (69%)",
     "entries": [
       {
         "level": "Stone Hill",
         "name": "Jordy",
         "time": "2:18.58",
-        "description": "Thief later route (tainou route?)",
+        "description": "Thief later route (WR Route)",
         "fileName": "ghost_stone_hill 1.18.58.bin",
         "downloadUrl": "https://drive.google.com/uc?export=download&id=1tcT3dZuA7lH5J_8YwktCxOfVWyK8ydqD",
         "hasFile": true
@@ -16,7 +16,7 @@
         "level": "Dark Hollow",
         "name": "Jordy",
         "time": "1:28.03",
-        "description": "Boosted skitter jump route",
+        "description": "Boosted Skitter Jump Route",
         "fileName": "ghost_dark_hollow.bin",
         "downloadUrl": "https://drive.google.com/uc?export=download&id=19qGvX_4JP7W4r2yGIjRpLVF-a779ty9F",
         "hasFile": true
@@ -25,7 +25,7 @@
         "level": "Town Square",
         "name": "Jordy",
         "time": "1:26.60",
-        "description": "Early Thor route",
+        "description": "Early Thor Route",
         "fileName": "ghost_town_square_jordy_120.bin",
         "downloadUrl": "https://drive.google.com/uc?export=download&id=1qlSxbdB4g5mV-xdiFyFkPaSI_lwT845D",
         "hasFile": true
@@ -34,7 +34,7 @@
         "level": "Toasty",
         "name": "Jordy",
         "time": "59.69",
-        "description": "All Vanish's",
+        "description": "All Vanishes",
         "fileName": "ghost_toasty_jordy_120.bin",
         "downloadUrl": "https://drive.google.com/uc?export=download&id=1Ws_wWhp6QA2gtvU_f10VQ9GQlfmle1vc",
         "hasFile": true
@@ -52,7 +52,7 @@
         "level": "Cliff Town",
         "name": "Jordy",
         "time": "2:17.98",
-        "description": "New Route",
+        "description": "Roof Jump Route (WR Route)",
         "fileName": "ghost_cliff_town_jordy_120.bin",
         "downloadUrl": "https://drive.google.com/uc?export=download&id=10XR8JQviULS8VhmGtMhJBMVOaNhw_5bx",
         "hasFile": true
@@ -60,65 +60,65 @@
       {
         "level": "Cliff Town",
         "name": "Composer",
-        "time": "2:22.29",
-        "description": "New Route",
-        "fileName": "ghost_cliff_town_composer_120_new_route.bin",
-        "downloadUrl": "https://drive.google.com/uc?export=download&id=1K-B1qQPsxTwYTiu2lW-I3swYEhwGU0L2",
-        "hasFile": true
-      },
-      {
-        "level": "Cliff Town",
-        "name": "Composer",
         "time": "2:23.63",
-        "description": "Traditional Route",
+        "description": "Standard Route",
         "fileName": "ghost_cliff_town_composer_120.bin",
         "downloadUrl": "https://drive.google.com/uc?export=download&id=1sjR_Ny5qM1taF9az8bDAOygUv4JScGrG",
         "hasFile": true
       },
       {
         "level": "Doctor Shemp",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Jordy",
+        "time": "1:23.51",
+        "description": "Early Chest",
+        "fileName": "ghost_doctor_shemp_jordy_early_chest.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=15_IAA5k4cKsTAZ0YQgiIwvbBQqMHOpvu",
+        "hasFile": true
+      },
+      {
+        "level": "Doctor Shemp",
+        "name": "Jordy",
+        "time": "1:24.48",
+        "description": "Standard Route No Early Chest",
+        "fileName": "ghost_doctor_shemp_jordy_no_early_chest.bin.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1bUgApJ9UYBJ8aVYzKHElgtasbVwLdgUw",
+        "hasFile": true
       },
       {
         "level": "Ice Cavern",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Jordy",
+        "time": "2:54.18",
+        "description": "Standard Route",
+        "fileName": "ghost_jordy_ice_cavern.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1qcjqKY4S2c7kmN7t6v9QGSh2gCRV2xGK",
+        "hasFile": true
       },
       {
         "level": "Alpine Ridge",
-        "name": "Composer",
-        "time": "2:36.88",
-        "description": "Traditional Route",
-        "fileName": "ghost_alpine_ridge_composer_120.bin",
-        "downloadUrl": "https://drive.google.com/uc?export=download&id=1N7VgxJiXTwGIx9VLz5UdJ1LyYnOF-lcV",
+        "name": "Jordy",
+        "time": "2:33.71",
+        "description": "Standard Route",
+        "fileName": "ghost_alpine_ridge_jordy_120.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1lAkUB-8Oex7bncLEx9NDYyjKrVOVOIRl",
         "hasFile": true
       },
       {
         "level": "High Caves",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Jordy",
+        "time": "2:33.86",
+        "description": "Full Bike Caves",
+        "fileName": "ghost_high_caves_jordy_120.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1Twg4i3ThwuFPFaDtwMZyj7vWB22V6Gyx",
+        "hasFile": true
       },
       {
         "level": "Wizard Peak",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Jordy",
+        "time": "2:29.04",
+        "description": "Standard Route",
+        "fileName": "ghost_wizard_peak_jordy_120.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=13xJ4XsEpCNVHOyQkf9LSsL62OsrXWyRn",
+        "hasFile": true
       },
       {
         "level": "Blowhard",
@@ -151,7 +151,7 @@
         "level": "Tree Tops",
         "name": "Composer",
         "time": "2:19.80",
-        "description": "Traditional Route w/ Loop at end of stoneknot",
+        "description": "Standard Route w/ Loop at end of stoneknot",
         "fileName": "ghost_tree_tops_composer_120.bin",
         "downloadUrl": "https://drive.google.com/uc?export=download&id=1jOLKLiAcnzmKYDrupaHIEdjgj4lhe2yg",
         "hasFile": true
@@ -160,7 +160,7 @@
         "level": "Metalhead",
         "name": "Composer",
         "time": "2:10.87",
-        "description": "Traditional Route w/ MH OOB, and no Lucky Yellow Drop",
+        "description": "Standard Route w/ MH OOB, and no Lucky Yellow Drop",
         "fileName": "ghost_metalhead_composer_120.bin",
         "downloadUrl": "https://drive.google.com/uc?export=download&id=1-2yS1cPDmhDUNtxPC4G9G6uxlss1dWnp",
         "hasFile": true
@@ -212,12 +212,12 @@
       },
       {
         "level": "Twilight Harbor",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Jordy",
+        "time": "2:06.64",
+        "description": "Proxy Route",
+        "fileName": "ghost_twilight_harbor_jordy_120.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1kwdicpEK1SIX5rdCDfgmJ1MlnM5-ALa2",
+        "hasFile": true
       },
       {
         "level": "Gnasty Gnorc",
@@ -241,13 +241,13 @@
   },
   {
     "name": "Any%",
-    "progress": "9/18 (50%)",
+    "progress": "19/19 (100%)",
     "entries": [
       {
         "level": "Stone Hill",
         "name": "Composer",
         "time": "1:08.48",
-        "description": "Traditional Route (Collects Gildas)",
+        "description": "Standard Route (Collects Gildas)",
         "fileName": "ghost_stone_hill_any_normal_route.bin",
         "downloadUrl": "https://drive.google.com/uc?export=download&id=1ZwyB-WTBNTMkqXi1ir01szcaM0LVpo9X",
         "hasFile": true
@@ -274,7 +274,7 @@
         "level": "Dry Canyon",
         "name": "Composer",
         "time": "1:00.78",
-        "description": "Traditional Route (No Ivor)",
+        "description": "Standard Route (No Ivor)",
         "fileName": "ghost_dry_canyon_any_reg.bin",
         "downloadUrl": "https://drive.google.com/uc?export=download&id=1vLnt5YYEBQNlFdU3S4TxPtybyogujYzC",
         "hasFile": true
@@ -317,39 +317,48 @@
       },
       {
         "level": "Ice Cavern",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Composer",
+        "time": "1:39.68",
+        "description": "Standard Route",
+        "fileName": "ghost_ice_cavern_composer_any.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=19zSgj56q8gdQ_xg95-EzPM_auA4QBmGQ",
+        "hasFile": true
       },
       {
         "level": "Alpine Ridge",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Composer",
+        "time": "1:36.02",
+        "description": "Standard Route",
+        "fileName": "ghost_alpine_ridge_composer_any.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1F6dhQBTgHM3QM1AIape2q0OYtMZQQm3t",
+        "hasFile": true
       },
       {
         "level": "High Caves",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Composer",
+        "time": "1:35.64",
+        "description": "Bike Caves",
+        "fileName": "ghost_high_caves_composer_any.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1nrRoBmbEKUnTvWY3qv2FfBpPQEYTIsnw",
+        "hasFile": true
+      },
+      {
+        "level": "High Caves",
+        "name": "Composer",
+        "time": "1:10.04",
+        "description": "Bikeless",
+        "fileName": "ghost_high_caves_composer_any_bikeless.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1USXcffIG1SRa8we6k9DuJ9YQQkVn99VC",
+        "hasFile": true
       },
       {
         "level": "Wizard Peak",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Composer",
+        "time": "1:31.64",
+        "description": "Standard Route",
+        "fileName": "ghost_wizard_peak_composer_any.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1Q2hKHLFelIuocfc9uxDS4tR-h_tKi6_J",
+        "hasFile": true
       },
       {
         "level": "Blowhard",
@@ -361,82 +370,82 @@
         "hasFile": true
       },
       {
-        "level": "Misty Bog",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
-      },
-      {
         "level": "Tree Tops",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Composer",
+        "time": "1:42.90",
+        "description": "Standard Rotue (No Daze Supercharge)",
+        "fileName": "ghost_tree_tops_composer_any.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1tD9XR4ha5ezcEe_jDJfIVqaUYql1thOG",
+        "hasFile": true
       },
       {
         "level": "Metalhead",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Composer",
+        "time": "1:41.10",
+        "description": "Standard Route (OOB)",
+        "fileName": "ghost_metalhead_composer_any.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1ooHcJWskB1iB7R1PePJkAN2zdwuwzALf",
+        "hasFile": true
       },
       {
         "level": "Jacques",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Composer",
+        "time": "1:02.63",
+        "description": "Standard Route (w/ Jacques Jump)",
+        "fileName": "ghost_jacques_composer_any.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1YdW_6qaDBKoxFpNp2AVdKxzB_gjtThQC",
+        "hasFile": true
       },
       {
         "level": "Gnasty Gnorc",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Composer",
+        "time": "50.48",
+        "description": "Fasty Gnorc",
+        "fileName": "ghost_gnasty_gnorc_composer_any_fasty.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1k2H-esyKJ5vit_l8lX_l34RLMgsCqjCh",
+        "hasFile": true
+      },
+      {
+        "level": "Gnasty Gnorc",
+        "name": "Composer",
+        "time": "55.23",
+        "description": "No Fasty Gnorc",
+        "fileName": "ghost_gnasty_gnorc_composer_any.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1_DOJW0p0RTLjEE1bz3NbS70HfNxvYgE6",
+        "hasFile": true
       }
     ]
   },
   {
     "name": "Vortex",
-    "progress": "2/24 (8%)",
+    "progress": "5/24 (21%)",
     "entries": [
       {
         "level": "Stone Hill",
         "name": "Composer",
         "time": "11.43",
-        "description": "",
+        "description": "Standard Route",
         "fileName": "ghost_stone_hill_composer_vortex.bin",
         "downloadUrl": "https://drive.google.com/uc?export=download&id=1yQ5_xf0A0d3TgwFukAGl7lXIDsrmZBMA",
         "hasFile": true
       },
       {
         "level": "Dark Hollow",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Composer",
+        "time": "15.81",
+        "description": "Standard Route",
+        "fileName": "ghost_dark_hollow_composer_vortex.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1pPBWc3Jg3ofpwYrxnVqRKWra-WXxmv6f",
+        "hasFile": true
       },
       {
         "level": "Town Square",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Composer",
+        "time": "11.09",
+        "description": "Standard Route",
+        "fileName": "ghost_town_square_composer_vortex.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1FYwnldHBuDcEuCinOG6OaPvlM8oE6UIK",
+        "hasFile": true
       },
       {
         "level": "Toasty",
@@ -620,18 +629,27 @@
       },
       {
         "level": "Gnasty Gnorc",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Composer",
+        "time": "50.48",
+        "description": "Fasty Gnorc",
+        "fileName": "ghost_gnasty_gnorc_composer_any_fasty.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1k2H-esyKJ5vit_l8lX_l34RLMgsCqjCh",
+        "hasFile": true
+      },
+      {
+        "level": "Gnasty Gnorc",
+        "name": "Composer",
+        "time": "55.23",
+        "description": "No Fasty Gnorc",
+        "fileName": "ghost_gnasty_gnorc_composer_any.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1_DOJW0p0RTLjEE1bz3NbS70HfNxvYgE6",
+        "hasFile": true
       }
     ]
   },
   {
     "name": "Flights",
-    "progress": "5/7 (71%)",
+    "progress": "9/9 (100%)",
     "entries": [
       {
         "level": "Night Flight",
@@ -653,36 +671,54 @@
       },
       {
         "level": "Crystal Flight",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Composer",
+        "time": "54.39",
+        "description": "Standard Route (31.6 flight time)",
+        "fileName": "ghost_crystal_flight_composer.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=15z9N0Dqf4cf1GJFal3BiSAYnjPGNmnie",
+        "hasFile": true
       },
       {
         "level": "Wild Flight",
-        "name": "",
-        "time": "",
-        "description": "",
-        "fileName": "",
-        "downloadUrl": null,
-        "hasFile": false
+        "name": "Composer",
+        "time": "48.62",
+        "description": "Early Plane Composer Route (45.81 Flight Time)",
+        "fileName": "ghost_wild_flight_composer.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=12lUwWZFWz8Evt-YdkDsQRElBbe-7veD9",
+        "hasFile": true
+      },
+      {
+        "level": "Wild Flight",
+        "name": "Composer",
+        "time": "50.61",
+        "description": "Composer Route (46.9 Flight Time)",
+        "fileName": "ghost_wild_flight_composer_route.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1rp0xngeytH3NsO1UECSwYkHCy4hssgc9",
+        "hasFile": true
+      },
+      {
+        "level": "Wild Flight",
+        "name": "Composer",
+        "time": "50.95",
+        "description": "Beginner Route (48.2 Flight Time)",
+        "fileName": "ghost_wild_flight_composer_route.bin",
+        "downloadUrl": "https://drive.google.com/uc?export=download&id=1rp0xngeytH3NsO1UECSwYkHCy4hssgc9",
+        "hasFile": true
       },
       {
         "level": "Icy Flight",
         "name": "Composer",
         "time": "54.61",
-        "description": "Standard Route (51.X flight time, w/ pause exit)",
+        "description": "Standard Route (51.X Flight Time, Pause Exit)",
         "fileName": "ghost_icy_flight_composer_pause.bin",
         "downloadUrl": "https://drive.google.com/uc?export=download&id=13Q51OYMHe3efSHu4Eg6oLt5u8n6TFWgM",
         "hasFile": true
       },
       {
         "level": "Icy Flight",
-        "name": "Compser",
+        "name": "Composer",
         "time": "55.54",
-        "description": "Standard Route (52.6 flght time, no pause exit)",
+        "description": "Standard Route (52.6 Flight Time, No Pause Exit)",
         "fileName": "ghost_icy_flight_composer_nopause.bin",
         "downloadUrl": "https://drive.google.com/uc?export=download&id=1MHfK8bheGeVK5nJvrLhQc1uXUSAInZR0",
         "hasFile": true
