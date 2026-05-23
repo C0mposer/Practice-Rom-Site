@@ -6,6 +6,7 @@ import {
   Download,
   ExternalLink,
   Gamepad2,
+  Gem,
   Ghost,
   Github,
   HardDriveDownload,
