@@ -66,7 +66,7 @@ const featureCards = [
   {
     title: 'Ghost Replays',
     body: 'Race against top-level movement like a racing game to refine your own movement.',
-    icon: Route,
+    icon: Ghost,
   },
   {
     title: 'Timing Tools',
@@ -76,7 +76,7 @@ const featureCards = [
   {
     title: 'Much More',
     body: 'Level select, custom skins, collision visualizers, quality-of-life settings, and much more!',
-    icon: Cpu,
+    icon: Gem,
   },
 ];
 
