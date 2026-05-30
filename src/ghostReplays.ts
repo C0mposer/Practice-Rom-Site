@@ -53,9 +53,11 @@ function fileBaseUrl() {
   return base?.trim().replace(/\/$/, '') || '';
 }
 
-function cellText(cell: GvizCell) {
+function cellText(cell: GvizCell, { preferFormatted = false } = {}) {
   if (!cell) return '';
+  if (preferFormatted && cell.f) return cell.f.trim();
   if (cell.v != null && cell.v !== '') return String(cell.v).trim();
+  if (cell.f) return cell.f.trim();
   return '';
 }
 
@@ -118,7 +120,7 @@ function rowCells(cells: GvizCell[]) {
   return {
     level: cellText(cells[1]),
     name: cellText(cells[2]),
-    time: cellText(cells[3]),
+    time: cellText(cells[3], { preferFormatted: true }),
     description: cellText(cells[4]),
     fileCell: cells[5] ?? null,
     descriptionCell: cells[4] ?? null,
@@ -211,6 +213,43 @@ function applyFileLinksToCategories(categories: GhostReplayCategory[], fileLinks
   }));
 }
 
+function cacheEntryKey(categoryName: string, entry: GhostReplayEntry) {
+  return [
+    categoryName,
+    entry.level,
+    entry.name,
+    entry.fileName,
+  ]
+    .map((value) => value.trim().toLowerCase())
+    .join('\u0000');
+}
+
+function applyCachedEntryDetails(
+  categories: GhostReplayCategory[],
+  cachedCategories: GhostReplayCategory[],
+) {
+  const cachedEntryByKey = new Map<string, GhostReplayEntry>();
+
+  for (const category of cachedCategories) {
+    for (const entry of category.entries) {
+      if (!entry.hasFile) continue;
+      cachedEntryByKey.set(cacheEntryKey(category.name, entry), entry);
+    }
+  }
+
+  return categories.map((category) => ({
+    ...category,
+    entries: category.entries.map((entry) => {
+      if (entry.time) return entry;
+
+      const cachedEntry = cachedEntryByKey.get(cacheEntryKey(category.name, entry));
+      if (!cachedEntry?.time) return entry;
+
+      return { ...entry, time: cachedEntry.time };
+    }),
+  }));
+}
+
 async function loadCachedGhostReplayData() {
   const response = await fetch(publicAssetUrl('ghost-replay-data.json'), { cache: 'no-store' });
   if (!response.ok) return null;
@@ -221,6 +260,7 @@ async function loadCachedGhostReplayData() {
 
 export async function fetchGhostReplayCategories() {
   const fileLinks = await fetchGhostSheetFileLinks();
+  const cached = await loadCachedGhostReplayData();
 
   try {
     const sheetResponse = await fetch(gvizFetchUrl(), { cache: 'no-store' });
@@ -230,9 +270,12 @@ export async function fetchGhostReplayCategories() {
     }
 
     const rows = parseGvizPayload(await sheetResponse.text());
-    const categories = parseGhostReplayTable(rows, fileLinks).filter(
+    let categories = parseGhostReplayTable(rows, fileLinks).filter(
       (category) => category.entries.length > 0,
     );
+    if (cached?.length) {
+      categories = applyCachedEntryDetails(categories, cached);
+    }
 
     if (categories.length === 0) {
       throw new Error('No ghost replay categories were found in the sheet.');
@@ -240,7 +283,6 @@ export async function fetchGhostReplayCategories() {
 
     return categories;
   } catch (error) {
-    const cached = await loadCachedGhostReplayData();
     if (cached?.length) {
       console.warn('Using cached ghost replay data because the live sheet request failed.', error);
       return applyFileLinksToCategories(cached, fileLinks).filter((category) => category.entries.length > 0);

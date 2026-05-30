@@ -766,9 +766,54 @@ input {
   gap: 8px;
 }
 
+.ghost-level-list {
+  display: grid;
+  gap: 18px;
+}
+
+.ghost-level-group {
+  display: grid;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ghost-level-group:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.ghost-level-group-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 14px;
+  padding: 9px 12px;
+  border-left: 4px solid #8bd8d2;
+  background:
+    linear-gradient(90deg, rgba(139, 216, 210, 0.14), rgba(139, 216, 210, 0.03) 58%, transparent),
+    rgba(4, 7, 11, 0.28);
+}
+
+.ghost-level-group-header h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.24rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.ghost-level-group-header span {
+  color: #8bd8d2;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .ghost-row {
   display: grid;
-  grid-template-columns: minmax(110px, 1.1fr) minmax(80px, 0.8fr) minmax(72px, 0.65fr) minmax(0, 2fr) minmax(108px, 0.75fr);
+  grid-template-columns: minmax(96px, 0.8fr) minmax(72px, 0.65fr) minmax(0, 2fr) minmax(108px, 0.75fr);
   gap: 10px;
   align-items: center;
   padding: 12px 14px;
@@ -814,7 +859,11 @@ input {
 }
 
 .ghost-row-missing {
-  grid-template-columns: minmax(110px, 1.1fr) minmax(0, 1fr);
+  grid-template-columns: 1fr;
+}
+
+.ghost-row-missing .ghost-cell {
+  grid-column: 1 / -1;
 }
 
 .ghost-download {
@@ -1408,22 +1457,18 @@ input {
   }
 
   .ghost-row:not(.ghost-row-missing) .ghost-cell:nth-child(1)::before {
-    content: 'Level';
-  }
-
-  .ghost-row:not(.ghost-row-missing) .ghost-cell:nth-child(2)::before {
     content: 'Player';
   }
 
-  .ghost-row:not(.ghost-row-missing) .ghost-cell:nth-child(3)::before {
+  .ghost-row:not(.ghost-row-missing) .ghost-cell:nth-child(2)::before {
     content: 'Time';
   }
 
-  .ghost-row:not(.ghost-row-missing) .ghost-cell:nth-child(4)::before {
+  .ghost-row:not(.ghost-row-missing) .ghost-cell:nth-child(3)::before {
     content: 'Description';
   }
 
-  .ghost-row:not(.ghost-row-missing) .ghost-cell:nth-child(5)::before {
+  .ghost-row:not(.ghost-row-missing) .ghost-cell:nth-child(4)::before {
     content: 'File';
   }
 

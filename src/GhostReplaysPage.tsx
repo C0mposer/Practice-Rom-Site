@@ -19,20 +19,74 @@ const ghostSheetUrl =
 type GhostTab = 'setup' | 'downloads';
 const ghostDownloadCategoryTabs = ['Any%', '120%', 'Vortex', 'Flights'] as const;
 type GhostDownloadCategoryTab = (typeof ghostDownloadCategoryTabs)[number];
+type GhostReplayEntry = GhostReplayCategory['entries'][number];
+type GhostReplayLevelGroup = {
+  level: string;
+  entries: GhostReplayEntry[];
+};
 
 function releaseAsset(release: GitHubRelease | null) {
   return release?.assets[0] ?? null;
 }
 
+function timeToSeconds(time: string) {
+  const trimmed = time.trim();
+  if (!trimmed) return Number.POSITIVE_INFINITY;
+
+  const parts = trimmed.split(':');
+  const seconds = Number(parts.pop());
+  if (!Number.isFinite(seconds)) return Number.POSITIVE_INFINITY;
+
+  const minutes = parts.reduce((sum, part) => {
+    const value = Number(part);
+    return Number.isFinite(value) ? sum * 60 + value : Number.POSITIVE_INFINITY;
+  }, 0);
+
+  return Number.isFinite(minutes) ? minutes * 60 + seconds : Number.POSITIVE_INFINITY;
+}
+
+function compareGhostReplayTimes(left: GhostReplayEntry, right: GhostReplayEntry) {
+  const timeDiff = timeToSeconds(left.time) - timeToSeconds(right.time);
+  if (timeDiff !== 0) return timeDiff;
+
+  return left.name.localeCompare(right.name) || left.description.localeCompare(right.description);
+}
+
+function groupGhostEntriesByLevel(entries: GhostReplayEntry[]) {
+  const groups: GhostReplayLevelGroup[] = [];
+  const groupByLevel = new Map<string, GhostReplayLevelGroup>();
+
+  for (const entry of entries) {
+    const existingGroup = groupByLevel.get(entry.level);
+
+    if (existingGroup) {
+      existingGroup.entries.push(entry);
+      continue;
+    }
+
+    const group = {
+      level: entry.level,
+      entries: [entry],
+    };
+    groupByLevel.set(entry.level, group);
+    groups.push(group);
+  }
+
+  return groups.map((group) => {
+    const replayEntries = group.entries.filter((entry) => entry.hasFile);
+    const sortedEntries = [...(replayEntries.length > 0 ? replayEntries : group.entries)].sort(compareGhostReplayTimes);
+    return { ...group, entries: sortedEntries };
+  });
+}
+
 function GhostReplayRow({
   entry,
 }: {
-  entry: GhostReplayCategory['entries'][number];
+  entry: GhostReplayEntry;
 }) {
   if (!entry.hasFile) {
     return (
       <div className="ghost-row ghost-row-missing">
-        <div className="ghost-cell ghost-level">{entry.level}</div>
         <div className="ghost-cell ghost-muted ghost-missing-note">No replay uploaded yet</div>
       </div>
     );
@@ -40,7 +94,6 @@ function GhostReplayRow({
 
   return (
     <div className="ghost-row">
-      <div className="ghost-cell ghost-level">{entry.level}</div>
       <div className="ghost-cell">{entry.name || '—'}</div>
       <div className="ghost-cell ghost-time">{entry.time || '—'}</div>
       <div className="ghost-cell ghost-description">{entry.description || '—'}</div>
@@ -95,6 +148,7 @@ function GhostDownloadsPanel() {
     categories.find((category) => category.name === activeCategoryName) ?? tabCategories[0] ?? null;
   const availableCount = countAvailableGhosts(tabCategories);
   const downloadableCount = countDownloadableGhosts(tabCategories);
+  const activeLevelGroups = activeCategory ? groupGhostEntriesByLevel(activeCategory.entries) : [];
 
   useEffect(() => {
     if (loading || categories.length === 0) return;
@@ -159,31 +213,51 @@ function GhostDownloadsPanel() {
                 </span>
               </header>
 
-              <div className="ghost-table" role="table" aria-label={`${activeCategory.name} ghost replays`}>
-                <div className="ghost-row ghost-row-head" role="row">
-                  <div className="ghost-cell" role="columnheader">
-                    Level
-                  </div>
-                  <div className="ghost-cell" role="columnheader">
-                    Player
-                  </div>
-                  <div className="ghost-cell" role="columnheader">
-                    Time
-                  </div>
-                  <div className="ghost-cell" role="columnheader">
-                    Description
-                  </div>
-                  <div className="ghost-cell" role="columnheader">
-                    File
-                  </div>
-                </div>
+              <div className="ghost-level-list">
+                {activeLevelGroups.map((group) => {
+                  const levelReplayCount = group.entries.filter((entry) => entry.hasFile).length;
 
-                {activeCategory.entries.map((entry) => (
-                  <GhostReplayRow
-                    entry={entry}
-                    key={`${activeCategory.name}-${entry.level}-${entry.fileName}-${entry.time}`}
-                  />
-                ))}
+                  return (
+                    <section className="ghost-level-group" key={`${activeCategory.name}-${group.level}`}>
+                      <header className="ghost-level-group-header">
+                        <h3>{group.level}</h3>
+                        <span>
+                          {levelReplayCount > 0
+                            ? `${levelReplayCount} replay${levelReplayCount === 1 ? '' : 's'}`
+                            : 'No replays'}
+                        </span>
+                      </header>
+
+                      <div
+                        className="ghost-table"
+                        role="table"
+                        aria-label={`${group.level} ${activeCategory.name} ghost replays`}
+                      >
+                        <div className="ghost-row ghost-row-head" role="row">
+                          <div className="ghost-cell" role="columnheader">
+                            Player
+                          </div>
+                          <div className="ghost-cell" role="columnheader">
+                            Time
+                          </div>
+                          <div className="ghost-cell" role="columnheader">
+                            Description
+                          </div>
+                          <div className="ghost-cell" role="columnheader">
+                            File
+                          </div>
+                        </div>
+
+                        {group.entries.map((entry, index) => (
+                          <GhostReplayRow
+                            entry={entry}
+                            key={`${activeCategory.name}-${entry.level}-${entry.fileName}-${entry.time}-${index}`}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
               </div>
             </section>
           ) : (

@@ -15,6 +15,7 @@ import {
   Route,
   ShieldCheck,
   Sparkles,
+  Timer,
   TimerReset,
   Wrench,
   X,
@@ -72,7 +73,7 @@ const featureCards = [
   {
     title: 'Timing Tools',
     body: 'Built in timers to manually time tricks, movements, and routes.',
-    icon: TimerReset,
+    icon: Timer,
   },
   {
     title: 'Much More',
